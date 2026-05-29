@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .auth-card { max-width: 560px; }
+    .step-indicator { display: flex; gap: 8px; justify-content: center; margin-bottom: var(--space-6); }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-subtle); transition: background var(--transition-base); }
+    .step-dot.active { background: var(--ras-gold); }
+  </style>
+</head>
+<body class="auth-layout">
+  <div class="auth-bg">
+    <div class="auth-bg-orb"></div>
+    <div class="auth-bg-orb"></div>
+    <div class="auth-bg-orb"></div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🌟</div>
+      <div class="auth-title">Rejoindre RAS</div>
+      <div class="auth-subtitle">Créez votre compte Rise And Shine</div>
+    </div>
+
+    <form id="registerForm" novalidate>
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-group">
+          <label class="form-label">Nom Complet <span class="required">*</span></label>
+          <input type="text" name="nom" class="form-input" placeholder="Jean Dupont" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email <span class="required">*</span></label>
+          <input type="email" name="email" class="form-input" placeholder="jean@email.com" required>
+        </div>
+      </div>
+
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-group">
+          <label class="form-label">Téléphone WhatsApp <span class="required">*</span></label>
+          <input type="tel" name="telephone" class="form-input" placeholder="+225 07 00 00 00" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de Passe <span class="required">*</span></label>
+          <input type="password" name="password" id="regPassword" class="form-input" placeholder="Min. 6 caractères" required>
+        </div>
+      </div>
+
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="form-group">
+          <label class="form-label">Sexe <span class="required">*</span></label>
+          <select name="sexe" class="form-select" required>
+            <option value="">Choisir...</option>
+            <option value="homme">Homme</option>
+            <option value="femme">Femme</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Âge</label>
+          <input type="number" name="age" class="form-input" placeholder="25" min="10" max="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville</label>
+          <input type="text" name="ville" class="form-input" placeholder="Abidjan">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Choisir un Administrateur</label>
+        <select name="adminId" id="adminSelect" class="form-select">
+          <option value="">Assignation automatique</option>
+        </select>
+        <p class="form-hint">Laissez vide pour une assignation automatique</p>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:var(--space-5);">
+        <input type="checkbox" id="acceptTerms" style="margin-top:3px;accent-color:var(--ras-gold);" required>
+        <label for="acceptTerms" style="font-size:0.8rem;color:var(--text-muted);cursor:pointer;">
+          J'accepte de rejoindre la communauté Rise And Shine et d'en respecter les valeurs chrétiennes.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">
+        ✦ Créer mon Compte
+      </button>
+    </form>
+
+    <div class="divider" style="margin: var(--space-5) 0;"></div>
+
+    <p style="text-align:center;font-size:0.875rem;color:var(--text-muted);">
+      Déjà membre ?
+      <a href="/login.html" style="color:var(--ras-gold);font-weight:600;">Se connecter</a>
+    </p>
+    <p style="text-align:center;margin-top:var(--space-2);">
+      <a href="/" style="font-size:0.8rem;color:var(--text-muted);">← Retour à l'accueil</a>
+    </p>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      const checkbox = document.getElementById('acceptTerms');
+      if (!checkbox.checked) {
+        e.preventDefault();
+        Toast.warning('Veuillez accepter les conditions pour continuer.');
+      }
+    });
+  </script>
+</body>
+</html>

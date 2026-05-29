@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rise And Shine — Plateforme du Ministère</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { overflow-x: hidden; }
+    .section-heading { text-align: center; margin-bottom: var(--space-12); }
+    .section-heading .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ras-gold);
+      margin-bottom: var(--space-3);
+    }
+    .section-heading h2 { margin-bottom: var(--space-3); }
+    .hero-stats {
+      display: flex;
+      gap: var(--space-8);
+      justify-content: center;
+      margin-top: var(--space-10);
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-value { font-size: 2rem; font-weight: 900; background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    footer { background: var(--bg-secondary); border-top: 1px solid var(--border-subtle); padding: var(--space-10) var(--space-6); text-align: center; }
+  </style>
+</head>
+<body class="landing-body">
+
+<!-- Navigation -->
+<nav class="landing-nav" id="landingNav">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo-icon" style="width:36px;height:36px;font-size:1rem;background:var(--gradient-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;">✦</div>
+    <div>
+      <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">RISE AND SHINE</div>
+      <div style="font-size:0.6rem;color:var(--text-muted);letter-spacing:0.5px;">Ministry Platform</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:var(--space-4);">
+    <a href="#features" style="color:var(--text-secondary);font-size:0.875rem;font-weight:500;display:none;" id="featuresLink">Fonctionnalités</a>
+    <a href="/login.html" class="btn btn-secondary" style="padding:8px 18px;">Connexion</a>
+    <a href="/register.html" class="btn btn-primary" style="padding:8px 18px;">Rejoindre</a>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-overlay"></div>
+
+  <!-- Floating cards -->
+  <div class="floating-cards">
+    <div class="floating-card" style="max-width:200px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span>✨</span>
+        <span style="font-weight:700;color:var(--ras-gold);font-size:0.85rem;">Témoignage</span>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text-muted);">Dieu a transformé ma vie...</p>
+    </div>
+    <div class="floating-card" style="max-width:180px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span>🌱</span>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;">Évangélisme</div>
+          <div style="font-size:0.7rem;color:var(--ras-gold);">+12 ce mois</div>
+        </div>
+      </div>
+    </div>
+    <div class="floating-card" style="max-width:180px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span>📅</span>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;">Prochain Culte</div>
+          <div id="heroCountdown" style="font-size:0.7rem;color:var(--ras-gold);">...</div>
+        </div>
+      </div>
+    </div>
+    <div class="floating-card" style="max-width:180px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span>🎯</span>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;">Croissance</div>
+          <div style="font-size:0.7rem;color:#4CAF50;">↑ En progression</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      ✦ Plateforme Officielle du Ministère
+    </div>
+    <h1 class="hero-title">
+      <span class="text-gradient">Rise And Shine</span><br>
+      Ministère de Réveil
+    </h1>
+    <p class="hero-desc">
+      La plateforme digitale complète pour structurer le mouvement, organiser les membres, superviser l'évangélisation et renforcer la communauté chrétienne.
+    </p>
+    <div class="hero-actions">
+      <a href="/register.html" class="btn btn-primary btn-lg">
+        ✦ Rejoindre le Mouvement
+      </a>
+      <a href="/login.html" class="btn btn-secondary btn-lg">
+        Connexion →
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">∞</div>
+        <div class="hero-stat-label">Membres</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">✝</div>
+        <div class="hero-stat-label">Foi</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">🔥</div>
+        <div class="hero-stat-label">Réveil</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-section" id="features">
+  <div class="section-heading">
+    <span class="eyebrow">Ce que nous offrons</span>
+    <h2>Un Écosystème Complet<br><span class="text-gradient">Pour Votre Ministère</span></h2>
+    <p style="color:var(--text-muted);max-width:600px;margin:0 auto;">Chaque fonctionnalité est conçue pour structurer, dynamiser et faire croître votre mouvement chrétien.</p>
+  </div>
+
+  <div class="features-grid container">
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">Gestion des Membres</h3>
+      <p style="font-size:0.875rem;">Profils complets, suivi spirituel, assignation automatique et rapports confidentiels pour chaque membre.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌱</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">CRM Évangélisme</h3>
+      <p style="font-size:0.875rem;">Suivez chaque personne évangélisée, de la première rencontre jusqu'au baptême avec un suivi personnalisé.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✨</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">Témoignages</h3>
+      <p style="font-size:0.875rem;">Plateforme communautaire pour partager les victoires, encourager la foi et inspirer la famille.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">Événements</h3>
+      <p style="font-size:0.875rem;">Gérez cultes, conférences et rassemblements avec inscriptions RSVP et compte à rebours en temps réel.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📚</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">Médiathèque</h3>
+      <p style="font-size:0.875rem;">Bibliothèque d'enseignements: PDF, vidéos, audios, études bibliques accessibles 24h/24.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <h3 style="font-size:1.1rem;margin-bottom:8px;">Finances</h3>
+      <p style="font-size:0.875rem;">Suivi transparent des dons, offrandes et dépenses avec rapports et workflows d'approbation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Events Preview -->
+<section style="padding: var(--space-16) var(--space-6); background: linear-gradient(to bottom, transparent, rgba(255,215,0,0.03), transparent);">
+  <div class="container">
+    <div class="section-heading">
+      <span class="eyebrow">Prochainement</span>
+      <h2>Événements <span class="text-gradient">à Venir</span></h2>
+    </div>
+    <div id="landingEvents" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);">
+      <div class="card" style="text-align:center;padding:var(--space-8);">
+        <div style="font-size:2rem;margin-bottom:var(--space-3);">📅</div>
+        <p class="text-muted">Chargement des événements...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Social Hub -->
+<section style="padding: var(--space-16) var(--space-6);">
+  <div class="container">
+    <div class="section-heading">
+      <span class="eyebrow">Restez Connecté</span>
+      <h2>Hub <span class="text-gradient">Réseaux Sociaux</span></h2>
+    </div>
+    <div class="social-hub">
+      <a href="#" class="social-btn facebook">📘 Facebook</a>
+      <a href="#" class="social-btn instagram">📸 Instagram</a>
+      <a href="#" class="social-btn youtube">▶ YouTube</a>
+      <a href="#" class="social-btn tiktok">🎵 TikTok</a>
+      <a href="#" class="social-btn whatsapp">💬 WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding: var(--space-20) var(--space-6); text-align: center; position: relative; overflow: hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(255,215,0,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+  <div class="container" style="position:relative;">
+    <h2 style="font-size:clamp(1.8rem,4vw,3rem);margin-bottom:var(--space-4);">
+      Prêt à <span class="text-gradient">Briller</span> ?
+    </h2>
+    <p style="color:var(--text-muted);font-size:1.1rem;max-width:500px;margin:0 auto var(--space-8);">
+      Rejoignez la famille Rise And Shine et faites partie d'un mouvement qui change des vies.
+    </p>
+    <a href="/register.html" class="btn btn-primary btn-lg" style="font-size:1rem;">
+      ✦ Créer mon Compte Gratuitement
+    </a>
+    <p style="margin-top:var(--space-4);font-size:0.8rem;color:var(--text-muted);">
+      Déjà membre ? <a href="/login.html" style="color:var(--ras-gold);">Se connecter</a>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:var(--space-4);">
+    <div class="logo-icon" style="width:32px;height:32px;font-size:0.9rem;background:var(--gradient-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;">✦</div>
+    <span style="font-weight:800;font-size:0.9rem;letter-spacing:1px;background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">RISE AND SHINE</span>
+  </div>
+  <p style="color:var(--text-muted);font-size:0.8rem;">© 2024 Rise And Shine Ministry. Plateforme digitale officielle.</p>
+  <p style="color:var(--text-muted);font-size:0.75rem;margin-top:var(--space-2);">"Élevez-vous et brillez, car votre lumière est venue" — Ésaïe 60:1</p>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="/js/app.js"></script>
+<script>
+  // Show features link on scroll
+  window.addEventListener('scroll', () => {
+    const fl = document.getElementById('featuresLink');
+    if (fl) fl.style.display = window.scrollY > 100 ? 'block' : 'none';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Événements — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-5); }
+  </style>
+</head>
+<body class="dashboard-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a href="/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Tableau de Bord</a>
+        <a href="/membres.html" class="nav-item" data-role="admin"><span class="nav-icon">👥</span> Membres</a>
+        <a href="/evangelisation.html" class="nav-item"><span class="nav-icon">🌱</span> Évangélisation</a>
+        <a href="/temoignages.html" class="nav-item"><span class="nav-icon">✨</span> Témoignages</a>
+        <a href="/evenements.html" class="nav-item active"><span class="nav-icon">📅</span> Événements</a>
+        <a href="/enseignements.html" class="nav-item"><span class="nav-icon">📚</span> Enseignements</a>
+        <a href="/galerie.html" class="nav-item"><span class="nav-icon">🖼</span> Galerie</a>
+      </div>
+      <div class="nav-section" data-role="admin"><div class="nav-section-label">Administration</div><a href="/finances.html" class="nav-item" data-role="admin"><span class="nav-icon">💰</span> Finances</a><a href="/admin.html" class="nav-item" data-role="super_admin"><span class="nav-icon">⚙</span> Gestion Utilisateurs</a></div>
+      <div class="nav-section"><div class="nav-section-label">Compte</div><a href="/parametres.html" class="nav-item"><span class="nav-icon">⚙</span> Paramètres</a><div class="nav-item" data-action="logout"><span class="nav-icon">🚪</span> Déconnexion</div></div>
+    </nav>
+    <div class="sidebar-user"><div class="avatar user-initials"></div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.8rem;" class="user-display-name">...</div><div style="font-size:0.7rem;color:var(--text-muted);" class="user-display-role">...</div></div></div>
+  </aside>
+
+  <main class="main-content">
+    <nav class="top-navbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="navbar-title">📅 Événements Rise And Shine</div>
+      <div class="navbar-actions">
+        <button class="btn btn-primary btn-sm" data-role="admin" onclick="Events.openNew()" id="createEventBtn" style="display:none;">+ Créer</button>
+        <button class="btn-icon" id="notifBtn">🔔<span class="notification-badge" style="display:none;">0</span></button>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <!-- Filters -->
+      <div class="section-header" style="margin-bottom:var(--space-5);">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="filterEvents('', this)">Tous</button>
+          <button class="tab-btn" onclick="filterEvents('interne', this)">Internes</button>
+          <button class="tab-btn" onclick="filterEvents('public', this)">Publics</button>
+          <button class="tab-btn" onclick="filterEvents('partenaire_externe', this)">Partenaires</button>
+        </div>
+        <select id="filterEventCat" class="form-select" style="width:auto;display:none;"></select>
+      </div>
+
+      <div class="events-grid" id="eventsGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:60px;"><div class="spinner" style="margin:0 auto;"></div></div>
+      </div>
+      <div id="eventsPagination"></div>
+    </div>
+  </main>
+
+  <!-- Notifications Panel -->
+  <div class="notifications-panel" id="notificationsPanel"><div class="notif-header"><h4 style="font-size:1rem;font-weight:700;">Notifications</h4><button class="btn btn-sm btn-secondary" onclick="Notifications.markAllRead()">Tout lire</button></div><div class="notif-list"></div></div>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay">
+    <!-- Create Event Modal -->
+    <div class="modal hidden" id="newEventModal">
+      <div class="modal-header"><h3 class="modal-title">📅 Créer un Événement</h3><button class="modal-close" onclick="Modal.close('newEventModal')">×</button></div>
+      <div class="modal-body">
+        <form id="newEventForm">
+          <div class="form-group"><label class="form-label">Titre <span class="required">*</span></label><input type="text" name="titre" class="form-input" placeholder="Ex: Nuit de Louange RAS 2024" required></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Date de début <span class="required">*</span></label><input type="datetime-local" name="dateDebut" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Date de fin</label><input type="datetime-local" name="dateFin" class="form-input"></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Lieu</label><input type="text" name="lieu" class="form-input" placeholder="Adresse ou lieu"></div>
+            <div class="form-group">
+              <label class="form-label">Catégorie <span class="required">*</span></label>
+              <select name="categorie" class="form-select" required>
+                <option value="interne">Interne</option>
+                <option value="public">Public</option>
+                <option value="partenaire_externe">Partenaire Externe</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-textarea" placeholder="Décrivez l'événement..."></textarea></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Capacité max.</label><input type="number" name="capacite" class="form-input" placeholder="0 = illimité" min="0"></div>
+            <div class="form-group"><label class="form-label">Bannière (URL)</label><input type="url" name="bannerUrl" class="form-input" placeholder="https://..."></div>
+          </div>
+          <div class="form-group"><label class="form-label">Intervenants (séparés par des virgules)</label><input type="text" name="intervenants" class="form-input" placeholder="Pasteur Jean, Prophète Marie..."></div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="Modal.close('newEventModal')">Annuler</button><button class="btn btn-primary" id="saveEventBtn" onclick="Events.save()">Créer l'Événement</button></div>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div class="modal modal-lg hidden" id="eventDetailModal">
+      <div class="modal-header"><h3 class="modal-title">📅 Détails de l'Événement</h3><button class="modal-close" onclick="Modal.close('eventDetailModal')">×</button></div>
+      <div class="modal-body" id="eventDetailContent"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    function filterEvents(cat, btn) {
+      document.querySelectorAll('.tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      Events.filters.categorie = cat || undefined;
+      Events.page = 1;
+      Events.load();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (RAS.currentUser && (RAS.currentUser.role === 'admin' || RAS.currentUser.role === 'super_admin')) {
+        const btn = document.getElementById('createEventBtn');
+        if (btn) btn.style.display = 'inline-flex';
+      }
+      // Handle intervenants string -> array on save
+      const origSave = Events.save.bind(Events);
+      Events.save = async function() {
+        const form = document.getElementById('newEventForm');
+        if (form) {
+          const interInput = form.querySelector('[name="intervenants"]');
+          if (interInput && interInput.value) {
+            const arr = interInput.value.split(',').map(s => s.trim()).filter(Boolean);
+            interInput.dataset.arrayValue = JSON.stringify(arr);
+          }
+        }
+        return origSave();
+      };
+    });
+  </script>
+</body>
+</html>

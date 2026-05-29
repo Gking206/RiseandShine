@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paramètres — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a href="/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Tableau de Bord</a>
+        <a href="/membres.html" class="nav-item" data-role="admin"><span class="nav-icon">👥</span> Membres</a>
+        <a href="/evangelisation.html" class="nav-item"><span class="nav-icon">🌱</span> Évangélisation</a>
+        <a href="/temoignages.html" class="nav-item"><span class="nav-icon">✨</span> Témoignages</a>
+        <a href="/evenements.html" class="nav-item"><span class="nav-icon">📅</span> Événements</a>
+        <a href="/enseignements.html" class="nav-item"><span class="nav-icon">📚</span> Enseignements</a>
+        <a href="/galerie.html" class="nav-item"><span class="nav-icon">🖼</span> Galerie</a>
+      </div>
+      <div class="nav-section" data-role="admin"><div class="nav-section-label">Administration</div><a href="/finances.html" class="nav-item" data-role="admin"><span class="nav-icon">💰</span> Finances</a><a href="/admin.html" class="nav-item" data-role="super_admin"><span class="nav-icon">⚙</span> Gestion Utilisateurs</a></div>
+      <div class="nav-section"><div class="nav-section-label">Compte</div><a href="/parametres.html" class="nav-item active"><span class="nav-icon">⚙</span> Paramètres</a><div class="nav-item" data-action="logout"><span class="nav-icon">🚪</span> Déconnexion</div></div>
+    </nav>
+    <div class="sidebar-user"><div class="avatar user-initials"></div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.8rem;" class="user-display-name">...</div><div style="font-size:0.7rem;color:var(--text-muted);" class="user-display-role">...</div></div></div>
+  </aside>
+
+  <main class="main-content">
+    <nav class="top-navbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="navbar-title">⚙ Paramètres du Compte</div>
+      <div class="navbar-actions">
+        <button class="btn-icon" id="notifBtn">🔔<span class="notification-badge" style="display:none;">0</span></button>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);" id="settingsGrid">
+
+        <!-- Profile Card -->
+        <div>
+          <!-- Profile Header -->
+          <div class="profile-header" style="margin-bottom:var(--space-6);">
+            <div class="avatar avatar-xl user-initials" style="font-size:1.5rem;"></div>
+            <div>
+              <h3 class="user-display-name">...</h3>
+              <p class="text-muted text-sm user-display-role">...</p>
+              <div style="margin-top:8px;" id="userRoleBadge"></div>
+            </div>
+          </div>
+
+          <!-- Edit Profile -->
+          <div class="card" style="margin-bottom:var(--space-5);">
+            <h4 style="margin-bottom:var(--space-5);">👤 Informations Personnelles</h4>
+            <form id="profileForm">
+              <div class="form-grid">
+                <div class="form-group"><label class="form-label">Nom Complet</label><input type="text" name="nom" class="form-input" placeholder="Votre nom complet"></div>
+                <div class="form-group"><label class="form-label">Téléphone WhatsApp</label><input type="tel" name="telephone" class="form-input" placeholder="+225 07 00 00 00"></div>
+                <div class="form-group"><label class="form-label">Ville</label><input type="text" name="ville" class="form-input" placeholder="Votre ville"></div>
+                <div class="form-group"><label class="form-label">Âge</label><input type="number" name="age" class="form-input" min="10" max="120"></div>
+              </div>
+
+              <!-- Champ email modifiable -->
+              <div class="form-group">
+                <label class="form-label">Adresse Email</label>
+                <div class="input-group">
+                  <span class="input-icon">📧</span>
+                  <input type="email" name="email" id="profileEmail" class="form-input" placeholder="votre@email.com">
+                </div>
+                <p class="form-hint">Modifiez votre email de connexion. Un email unique est requis.</p>
+              </div>
+
+              <div class="form-group"><label class="form-label">Photo de Profil (URL)</label><input type="url" name="avatar" class="form-input" placeholder="https://..."></div>
+              <button type="button" class="btn btn-primary" id="saveProfileBtn" onclick="Settings.saveProfile()">💾 Sauvegarder les modifications</button>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <!-- Change Password -->
+          <div class="card" style="margin-bottom:var(--space-5);">
+            <h4 style="margin-bottom:var(--space-5);">🔒 Changer le Mot de Passe</h4>
+            <form id="passwordForm">
+              <div class="form-group"><label class="form-label">Mot de passe actuel</label><input type="password" name="ancienMotDePasse" class="form-input" placeholder="Mot de passe actuel"></div>
+              <div class="form-group"><label class="form-label">Nouveau mot de passe</label><input type="password" name="nouveauMotDePasse" class="form-input" placeholder="Nouveau mot de passe (min. 6 car.)"></div>
+              <div class="form-group"><label class="form-label">Confirmer le nouveau mot de passe</label><input type="password" name="confirmMotDePasse" class="form-input" placeholder="Confirmer..."></div>
+              <button type="button" class="btn btn-primary" id="savePasswordBtn" onclick="Settings.changePassword()">🔑 Modifier</button>
+            </form>
+          </div>
+
+          <!-- Social Media Links (Super Admin) -->
+          <div class="card" data-role="super_admin" id="socialCard">
+            <h4 style="margin-bottom:var(--space-5);">🌐 Réseaux Sociaux RAS</h4>
+            <p class="text-muted text-sm" style="margin-bottom:var(--space-4);">Liens vers les réseaux officiels du mouvement.</p>
+            <div class="social-hub" style="flex-direction:column;">
+              <a href="#" class="social-btn facebook" style="justify-content:flex-start;">📘 Facebook — Rise And Shine</a>
+              <a href="#" class="social-btn instagram" style="justify-content:flex-start;">📸 Instagram — @riseandshine</a>
+              <a href="#" class="social-btn youtube" style="justify-content:flex-start;">▶ YouTube — Rise And Shine</a>
+              <a href="#" class="social-btn tiktok" style="justify-content:flex-start;">🎵 TikTok — @riseandshine</a>
+              <a href="#" class="social-btn whatsapp" style="justify-content:flex-start;">💬 Groupe WhatsApp RAS</a>
+            </div>
+          </div>
+
+          <!-- Danger Zone -->
+          <div class="card" style="border-color:rgba(255,69,0,0.2);margin-top:var(--space-5);">
+            <h4 style="color:var(--ras-red);margin-bottom:var(--space-3);">⚠ Zone Dangereuse</h4>
+            <p class="text-muted text-sm" style="margin-bottom:var(--space-4);">Ces actions sont irréversibles. Agissez avec précaution.</p>
+            <button class="btn btn-danger" onclick="Auth.logout()">🚪 Déconnexion Sécurisée</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notifications Panel -->
+  <div class="notifications-panel" id="notificationsPanel"><div class="notif-header"><h4 style="font-size:1rem;font-weight:700;">Notifications</h4><button class="btn btn-sm btn-secondary" onclick="Notifications.markAllRead()">Tout lire</button></div><div class="notif-list"></div></div>
+
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const grid = document.getElementById('settingsGrid');
+      const resize = () => {
+        if (grid) grid.style.gridTemplateColumns = window.innerWidth < 1024 ? '1fr' : '1fr 1fr';
+      };
+      resize();
+      window.addEventListener('resize', resize);
+
+      if (RAS.currentUser) {
+        const badge = document.getElementById('userRoleBadge');
+        if (badge) badge.innerHTML = Utils.roleBadge(RAS.currentUser.role);
+        if (RAS.currentUser.role !== 'super_admin') {
+          const sc = document.getElementById('socialCard');
+          if (sc) sc.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

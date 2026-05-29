@@ -1,0 +1,92 @@
+[
+  {
+    "id": "4ae1828b-99f6-45e0-843a-bb756b8b0bab",
+    "userId": "144b9a81-f744-466a-be5a-f0973bd8630e",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Othniel BALIMA ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:36:07.102Z",
+    "updatedAt": "2026-05-29T14:36:07.102Z"
+  },
+  {
+    "id": "9d878daa-dfcd-47fc-bd71-4b3c3048cd00",
+    "userId": "334a1a53-4ee1-4526-95f3-f7054725d4ca",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Eldie OUEDRAOGO ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:37:20.187Z",
+    "updatedAt": "2026-05-29T14:37:20.187Z"
+  },
+  {
+    "id": "7d8134b7-af2b-46f9-ad1f-ec6fc128c5bb",
+    "userId": "f5948ffa-8d1b-4a08-b883-d1c05701a73c",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Fidelia BAMOGO ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:38:38.995Z",
+    "updatedAt": "2026-05-29T14:38:38.995Z"
+  },
+  {
+    "id": "2af94966-c781-4acc-a96c-e0a8a857671e",
+    "userId": "786d7e16-3892-48cf-8d3f-88887d86294a",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Jedidia OUEDRAOGO ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:40:12.822Z",
+    "updatedAt": "2026-05-29T14:40:12.822Z"
+  },
+  {
+    "id": "2e199fa2-10db-43b6-843f-3f2eb7d1d2eb",
+    "userId": "4f28a0eb-6e1e-4d89-b288-105b02d06cc9",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Alban YELKOUNI ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:41:33.465Z",
+    "updatedAt": "2026-05-29T14:41:33.465Z"
+  },
+  {
+    "id": "b906013a-0f20-4aef-964d-561cfaa2943c",
+    "userId": "a09b106f-4fe8-44bb-b7a2-88219be865d5",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Luther OUEDRAOGO ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:42:32.487Z",
+    "updatedAt": "2026-05-29T14:42:32.487Z"
+  },
+  {
+    "id": "0637db8a-97de-44fd-9052-754a23f045b3",
+    "userId": "1c4f4a5f-cfe2-4594-8ae5-e3ec2079b67e",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Eldad COULIBALY ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:44:30.070Z",
+    "updatedAt": "2026-05-29T14:44:30.070Z"
+  },
+  {
+    "id": "27a4b1de-9a3c-42f7-bfc8-bf75d453c65d",
+    "userId": "b874181d-5e8d-4d7b-a6ff-91254e6d5726",
+    "type": "bienvenue",
+    "message": "Bienvenue sur Rise And Shine, Jonathan BAZIE ! Votre compte a été créé.",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:46:35.121Z",
+    "updatedAt": "2026-05-29T14:46:35.121Z"
+  },
+  {
+    "id": "43053cc3-27bb-4b5b-a37d-c5c4b7fce8de",
+    "userId": "b874181d-5e8d-4d7b-a6ff-91254e6d5726",
+    "type": "role_change",
+    "message": "Votre rôle a été modifié: super_admin",
+    "data": {},
+    "lu": false,
+    "createdAt": "2026-05-29T14:47:06.723Z",
+    "updatedAt": "2026-05-29T14:47:06.723Z"
+  }
+]

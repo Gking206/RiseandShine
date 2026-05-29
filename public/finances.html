@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finances — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a href="/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Tableau de Bord</a>
+        <a href="/membres.html" class="nav-item" data-role="admin"><span class="nav-icon">👥</span> Membres</a>
+        <a href="/evangelisation.html" class="nav-item"><span class="nav-icon">🌱</span> Évangélisation</a>
+        <a href="/temoignages.html" class="nav-item"><span class="nav-icon">✨</span> Témoignages</a>
+        <a href="/evenements.html" class="nav-item"><span class="nav-icon">📅</span> Événements</a>
+        <a href="/enseignements.html" class="nav-item"><span class="nav-icon">📚</span> Enseignements</a>
+        <a href="/galerie.html" class="nav-item"><span class="nav-icon">🖼</span> Galerie</a>
+      </div>
+      <div class="nav-section" data-role="admin">
+        <div class="nav-section-label">Administration</div>
+        <a href="/finances.html" class="nav-item active" data-role="admin"><span class="nav-icon">💰</span> Finances</a>
+        <a href="/admin.html" class="nav-item" data-role="super_admin"><span class="nav-icon">⚙</span> Gestion Utilisateurs</a>
+      </div>
+      <div class="nav-section"><div class="nav-section-label">Compte</div><a href="/parametres.html" class="nav-item"><span class="nav-icon">⚙</span> Paramètres</a><div class="nav-item" data-action="logout"><span class="nav-icon">🚪</span> Déconnexion</div></div>
+    </nav>
+    <div class="sidebar-user"><div class="avatar user-initials"></div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.8rem;" class="user-display-name">...</div><div style="font-size:0.7rem;color:var(--text-muted);" class="user-display-role">...</div></div></div>
+  </aside>
+
+  <main class="main-content">
+    <nav class="top-navbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="navbar-title">💰 Gestion Financière</div>
+      <div class="navbar-actions">
+        <button class="btn btn-primary btn-sm" onclick="Finance.openNew()">+ Transaction</button>
+        <button class="btn-icon" id="notifBtn">🔔<span class="notification-badge" style="display:none;">0</span></button>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <!-- Finance Summary (Super Admin only) -->
+      <div id="financeSummary" style="display:none;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);margin-bottom:var(--space-6);">
+          <div class="finance-stat income">
+            <div style="font-size:1.5rem;margin-bottom:4px;">💝</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Dons Approuvés</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#4CAF50;" id="finance-dons">—</div>
+          </div>
+          <div class="finance-stat" style="background:rgba(100,149,237,0.1);border:1px solid rgba(100,149,237,0.2);">
+            <div style="font-size:1.5rem;margin-bottom:4px;">🙏</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Offrandes</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#6495ED;" id="finance-offrendes">—</div>
+          </div>
+          <div class="finance-stat expense">
+            <div style="font-size:1.5rem;margin-bottom:4px;">💸</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Dépenses</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--ras-red);" id="finance-depenses">—</div>
+          </div>
+          <div class="finance-stat balance">
+            <div style="font-size:1.5rem;margin-bottom:4px;">⚖</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Solde Net</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--ras-gold);" id="finance-solde">—</div>
+          </div>
+        </div>
+
+        <!-- Finance Chart -->
+        <div class="card" style="margin-bottom:var(--space-6);">
+          <div class="section-header">
+            <div class="section-title">📊 Évolution Financière (6 mois)</div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#4CAF50;"></div>Entrées</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#FF4500;"></div>Sorties</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:220px;">
+            <canvas id="financeChart" data-chart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:var(--space-4);">
+        <div class="search-bar">
+          <select id="filterFinanceType" class="form-select" style="width:auto;">
+            <option value="">Tous les types</option>
+            <option value="don">💝 Dons</option>
+            <option value="offrande">🙏 Offrandes</option>
+            <option value="depense">💸 Dépenses</option>
+            <option value="budget_evenement">🎪 Budget Événement</option>
+          </select>
+          <select id="filterFinanceStatut" class="form-select" style="width:auto;">
+            <option value="">Tous statuts</option>
+            <option value="en_attente">En Attente</option>
+            <option value="approuve">Approuvé</option>
+            <option value="rejete">Rejeté</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Transactions Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr><th>Date</th><th>Type</th><th>Montant</th><th>Description</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="financeTableBody">
+              <tr><td colspan="6" style="padding:40px;text-align:center;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="financePagination"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notifications Panel -->
+  <div class="notifications-panel" id="notificationsPanel"><div class="notif-header"><h4 style="font-size:1rem;font-weight:700;">Notifications</h4><button class="btn btn-sm btn-secondary" onclick="Notifications.markAllRead()">Tout lire</button></div><div class="notif-list"></div></div>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal hidden" id="newTransactionModal">
+      <div class="modal-header"><h3 class="modal-title">💰 Nouvelle Transaction</h3><button class="modal-close" onclick="Modal.close('newTransactionModal')">×</button></div>
+      <div class="modal-body">
+        <form id="newTransactionForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Type <span class="required">*</span></label>
+              <select name="type" class="form-select" required>
+                <option value="don">💝 Don</option>
+                <option value="offrande">🙏 Offrande</option>
+                <option value="depense">💸 Dépense</option>
+                <option value="budget_evenement">🎪 Budget Événement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Montant (FCFA) <span class="required">*</span></label>
+              <input type="number" name="montant" class="form-input" placeholder="0" min="0" step="0.01" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description <span class="required">*</span></label>
+            <input type="text" name="description" class="form-input" placeholder="Ex: Don mensuel de la cellule..." required>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Catégorie</label>
+              <select name="categorie" class="form-select">
+                <option value="general">Général</option>
+                <option value="culte">Culte</option>
+                <option value="evenement">Événement</option>
+                <option value="formation">Formation</option>
+                <option value="evangelisme">Évangélisme</option>
+                <option value="fonctionnement">Fonctionnement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" name="dateTransaction" class="form-input">
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Reçu (URL)</label><input type="url" name="recu" class="form-input" placeholder="https://..."></div>
+          <div id="approvalNote" style="background:rgba(255,215,0,0.06);border-radius:8px;padding:10px;font-size:0.8rem;color:var(--text-muted);">
+            ⏳ Les transactions soumises par les admins sont soumises à validation par un Super Admin.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="Modal.close('newTransactionModal')">Annuler</button><button class="btn btn-primary" id="saveTransactionBtn" onclick="Finance.save()">Enregistrer</button></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (RAS.currentUser && RAS.currentUser.role === 'super_admin') {
+        const summary = document.getElementById('financeSummary');
+        if (summary) summary.style.display = 'block';
+        const note = document.getElementById('approvalNote');
+        if (note) note.style.display = 'none';
+      }
+
+      const statusFilter = document.getElementById('filterFinanceStatut');
+      if (statusFilter) statusFilter.addEventListener('change', (e) => {
+        Finance.filters.statut = e.target.value || undefined;
+        Finance.page = 1;
+        Finance.load();
+      });
+    });
+  </script>
+</body>
+</html>

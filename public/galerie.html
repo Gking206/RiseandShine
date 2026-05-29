@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galerie — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a href="/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Tableau de Bord</a>
+        <a href="/membres.html" class="nav-item" data-role="admin"><span class="nav-icon">👥</span> Membres</a>
+        <a href="/evangelisation.html" class="nav-item"><span class="nav-icon">🌱</span> Évangélisation</a>
+        <a href="/temoignages.html" class="nav-item"><span class="nav-icon">✨</span> Témoignages</a>
+        <a href="/evenements.html" class="nav-item"><span class="nav-icon">📅</span> Événements</a>
+        <a href="/enseignements.html" class="nav-item"><span class="nav-icon">📚</span> Enseignements</a>
+        <a href="/galerie.html" class="nav-item active"><span class="nav-icon">🖼</span> Galerie</a>
+      </div>
+      <div class="nav-section" data-role="admin"><div class="nav-section-label">Administration</div><a href="/finances.html" class="nav-item" data-role="admin"><span class="nav-icon">💰</span> Finances</a><a href="/admin.html" class="nav-item" data-role="super_admin"><span class="nav-icon">⚙</span> Gestion Utilisateurs</a></div>
+      <div class="nav-section"><div class="nav-section-label">Compte</div><a href="/parametres.html" class="nav-item"><span class="nav-icon">⚙</span> Paramètres</a><div class="nav-item" data-action="logout"><span class="nav-icon">🚪</span> Déconnexion</div></div>
+    </nav>
+    <div class="sidebar-user"><div class="avatar user-initials"></div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.8rem;" class="user-display-name">...</div><div style="font-size:0.7rem;color:var(--text-muted);" class="user-display-role">...</div></div></div>
+  </aside>
+
+  <main class="main-content">
+    <nav class="top-navbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="navbar-title">🖼 Galerie Photos</div>
+      <div class="navbar-actions">
+        <button class="btn btn-primary btn-sm" id="addGalleryBtn" style="display:none;" onclick="Gallery.openNew()">+ Ajouter</button>
+        <button class="btn-icon" id="notifBtn">🔔<span class="notification-badge" style="display:none;">0</span></button>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <div class="gallery-grid" id="galleryGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-3);">
+        <div style="grid-column:1/-1;text-align:center;padding:60px;"><div class="spinner" style="margin:0 auto;"></div></div>
+      </div>
+      <div id="galleryPagination"></div>
+    </div>
+  </main>
+
+  <!-- Notifications Panel -->
+  <div class="notifications-panel" id="notificationsPanel"><div class="notif-header"><h4 style="font-size:1rem;font-weight:700;">Notifications</h4><button class="btn btn-sm btn-secondary" onclick="Notifications.markAllRead()">Tout lire</button></div><div class="notif-list"></div></div>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal hidden" id="newGalleryModal">
+      <div class="modal-header"><h3 class="modal-title">🖼 Ajouter une Image</h3><button class="modal-close" onclick="Modal.close('newGalleryModal')">×</button></div>
+      <div class="modal-body">
+        <form id="newGalleryForm">
+          <div class="form-group"><label class="form-label">Titre</label><input type="text" name="titre" class="form-input" placeholder="Titre de l'image"></div>
+          <div class="form-group"><label class="form-label">URL de l'Image <span class="required">*</span></label><input type="url" name="imageUrl" class="form-input" placeholder="https://..." required></div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select name="categorie" class="form-select">
+              <option value="general">Général</option>
+              <option value="evenement">Événement</option>
+              <option value="culte">Culte</option>
+              <option value="evangelisme">Évangélisme</option>
+              <option value="formation">Formation</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-textarea" placeholder="Description optionnelle..."></textarea></div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="Modal.close('newGalleryModal')">Annuler</button><button class="btn btn-primary" onclick="Gallery.save()">Ajouter</button></div>
+    </div>
+
+    <div class="modal modal-lg hidden" id="galleryDetailModal">
+      <div class="modal-header"><h3 class="modal-title">🖼 Aperçu</h3><button class="modal-close" onclick="Modal.close('galleryDetailModal')">×</button></div>
+      <div class="modal-body" id="galleryDetailContent"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (RAS.currentUser && (RAS.currentUser.role === 'admin' || RAS.currentUser.role === 'super_admin')) {
+        const btn = document.getElementById('addGalleryBtn');
+        if (btn) btn.style.display = 'inline-flex';
+      }
+    });
+  </script>
+</body>
+</html>

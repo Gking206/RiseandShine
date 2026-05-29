@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membres — Rise And Shine</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">✦</div>
+      <div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a href="/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Tableau de Bord</a>
+        <a href="/membres.html" class="nav-item active" data-role="admin"><span class="nav-icon">👥</span> Membres</a>
+        <a href="/evangelisation.html" class="nav-item"><span class="nav-icon">🌱</span> Évangélisation</a>
+        <a href="/temoignages.html" class="nav-item"><span class="nav-icon">✨</span> Témoignages</a>
+        <a href="/evenements.html" class="nav-item"><span class="nav-icon">📅</span> Événements</a>
+        <a href="/enseignements.html" class="nav-item"><span class="nav-icon">📚</span> Enseignements</a>
+        <a href="/galerie.html" class="nav-item"><span class="nav-icon">🖼</span> Galerie</a>
+      </div>
+      <div class="nav-section" data-role="admin">
+        <div class="nav-section-label">Administration</div>
+        <a href="/finances.html" class="nav-item" data-role="admin"><span class="nav-icon">💰</span> Finances</a>
+        <a href="/admin.html" class="nav-item" data-role="super_admin"><span class="nav-icon">⚙</span> Gestion Utilisateurs</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Compte</div>
+        <a href="/parametres.html" class="nav-item"><span class="nav-icon">⚙</span> Paramètres</a>
+        <div class="nav-item" data-action="logout"><span class="nav-icon">🚪</span> Déconnexion</div>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="avatar user-initials"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.8rem;" class="user-display-name">...</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);" class="user-display-role">...</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <nav class="top-navbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="navbar-title">👥 Gestion des Membres</div>
+      <div class="navbar-actions">
+        <button class="btn-icon" id="notifBtn">🔔<span class="notification-badge" style="display:none;">0</span></button>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <!-- Stats Row -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card">
+          <div class="stat-icon gold">👥</div>
+          <div><div class="stat-value" id="stat-membres-total">—</div><div class="stat-label">Total Membres</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <div><div class="stat-value" id="stat-membres-actifs-c">—</div><div class="stat-label">Actifs</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⏸</div>
+          <div><div class="stat-value" id="stat-membres-inactifs">—</div><div class="stat-label">Inactifs</div></div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="search-bar">
+          <div class="search-input-group">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchMembers" class="form-input" placeholder="Rechercher un membre...">
+          </div>
+          <select id="filterStatus" class="form-select" style="width:auto;">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Members Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>Téléphone</th>
+                <th>Ville</th>
+                <th>Âge</th>
+                <th>Statut</th>
+                <th>Inscription</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody">
+              <tr><td colspan="7" style="padding:40px;text-align:center;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="membersPagination"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notifications Panel -->
+  <div class="notifications-panel" id="notificationsPanel">
+    <div class="notif-header">
+      <h4 style="font-size:1rem;font-weight:700;">Notifications</h4>
+      <button class="btn btn-sm btn-secondary" onclick="Notifications.markAllRead()">Tout lire</button>
+    </div>
+    <div class="notif-list"></div>
+  </div>
+
+  <!-- Edit Member Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal hidden" id="editMemberModal">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Modifier le Membre</h3>
+        <button class="modal-close" onclick="Modal.close('editMemberModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="editMemberForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nom Complet</label>
+              <input type="text" name="nom" class="form-input" placeholder="Nom complet">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-input" placeholder="Email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input type="tel" name="telephone" class="form-input" placeholder="Téléphone">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ville</label>
+              <input type="text" name="ville" class="form-input" placeholder="Ville">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Âge</label>
+              <input type="number" name="age" class="form-input" placeholder="Âge">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut</label>
+              <select name="statut" class="form-select">
+                <option value="actif">Actif</option>
+                <option value="inactif">Inactif</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-textarea" placeholder="Notes sur ce membre..."></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" name="baptise" id="baptiseCheck">
+            <label for="baptiseCheck" class="form-label" style="margin:0;">Baptisé</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="Modal.close('editMemberModal')">Annuler</button>
+        <button class="btn btn-primary" id="saveEditMemberBtn" onclick="Members.saveEdit()">Enregistrer</button>
+      </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div class="modal hidden" id="reportModal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="reportModalTitle">📋 Rapport Confidentiel</h3>
+        <button class="modal-close" onclick="Modal.close('reportModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="reportForm">
+          <div class="form-group">
+            <label class="form-label">Titre du Rapport <span class="required">*</span></label>
+            <input type="text" name="titre" class="form-input" placeholder="Ex: Observation spirituelle — Mai 2024" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select name="type" class="form-select">
+              <option value="observation">Observation Spirituelle</option>
+              <option value="priere">Demande de Prière</option>
+              <option value="mentorat">Note de Mentorat</option>
+              <option value="evaluation">Évaluation de Croissance</option>
+              <option value="presence">Présence / Assiduité</option>
+              <option value="discipline">Observation Disciplinaire</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contenu <span class="required">*</span></label>
+            <textarea name="contenu" class="form-textarea" style="min-height:150px;" placeholder="Détails du rapport confidentiel..." required></textarea>
+          </div>
+          <div style="background:rgba(255,69,0,0.06);border:1px solid rgba(255,69,0,0.2);border-radius:8px;padding:10px 14px;font-size:0.8rem;color:var(--ras-red);">
+            🔒 Ce rapport est STRICTEMENT CONFIDENTIEL. Visible uniquement par vous et les Super Admins.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="Modal.close('reportModal')">Annuler</button>
+        <button class="btn btn-primary" id="saveReportBtn" onclick="Members.saveReport()">Créer le Rapport</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!RAS.currentUser) return;
+      // Load stats
+      const res = await API.get('/members/stats');
+      if (res.ok) {
+        const { stats } = res.data;
+        document.getElementById('stat-membres-total').textContent = stats.total;
+        document.getElementById('stat-membres-actifs-c').textContent = stats.actifs;
+        document.getElementById('stat-membres-inactifs').textContent = stats.inactifs;
+      }
+    });
+  </script>
+</body>
+</html>

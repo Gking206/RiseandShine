@@ -1,0 +1,32 @@
+[
+  {
+    "id": "2fc881b5-f42d-4bb9-8b78-618206d0495f",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-05-29T14:00:14.392Z",
+    "updatedAt": "2026-05-29T14:00:14.392Z"
+  },
+  {
+    "id": "b8a9be50-fdfa-4e30-9e0c-7da7b9b0e716",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-05-29T14:17:07.243Z",
+    "updatedAt": "2026-05-29T14:17:07.243Z"
+  },
+  {
+    "id": "290aebc4-4e4e-4f84-9b43-0beb634b1389",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-05-29T14:31:26.948Z",
+    "updatedAt": "2026-05-29T14:31:26.948Z"
+  }
+]
