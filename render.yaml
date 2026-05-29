@@ -4,7 +4,7 @@ services:
     env: node
     region: frankfurt
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && node -e "const fs=require('fs');['data/sessions','data/backups','logs','public/uploads'].forEach(d=>fs.mkdirSync(d,{recursive:true}));console.log('Dossiers créés.');"
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
@@ -12,5 +12,3 @@ services:
         value: production
       - key: SESSION_SECRET
         generateValue: true
-      - key: PORT
-        value: 3000

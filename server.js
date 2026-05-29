@@ -26,20 +26,29 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 const IS_VERCEL = !!process.env.VERCEL;
 
+// ── Création synchrone des dossiers requis ──────────────────────────────────
+// DOIT se faire AVANT l'instanciation de session-file-store.
+// fs.mkdirSync avec recursive:true crée tous les parents manquants sans erreur.
+const fssync = require('fs');
+const _requiredDirs = [
+  path.join(config.paths.data, 'sessions'),
+  path.join(config.paths.data, 'backups'),
+];
+if (!IS_VERCEL) {
+  _requiredDirs.push(config.paths.logs);
+  _requiredDirs.push(config.paths.uploads);
+}
+for (const dir of _requiredDirs) {
+  try { fssync.mkdirSync(dir, { recursive: true }); } catch {}
+}
+
 // ── Initialisation des données ──────────────────────────────────────────────
-// Lancée immédiatement au démarrage du module. Toutes les requêtes attendent
-// via le middleware ci-dessous avant d'être traitées.
+// Lancée immédiatement. Toutes les requêtes attendent via le middleware plus bas.
 const _initPromise = (async () => {
   try {
     await ensureDataDir();
-    if (!IS_VERCEL) {
-      await fs.mkdir(config.paths.logs, { recursive: true });
-      await fs.mkdir(config.paths.uploads, { recursive: true });
-    }
     await initializeSuperAdmins();
-    if (!IS_VERCEL) {
-      logger.info('Initialisation terminée.');
-    }
+    console.log('✅ Initialisation terminée (super admins prêts).');
   } catch (err) {
     console.error('Erreur initialisation:', err);
   }

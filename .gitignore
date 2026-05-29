@@ -3,6 +3,7 @@ node_modules/
 
 # Données locales (recréées automatiquement au démarrage)
 data/*.json
+data/*.bak
 data/backups/
 data/sessions/
 logs/
