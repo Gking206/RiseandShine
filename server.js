@@ -24,8 +24,36 @@ const eventRoutes = require('./routes/eventRoutes');
 const teachingRoutes = require('./routes/teachingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
-const app = express();
 const IS_VERCEL = !!process.env.VERCEL;
+
+// ── Initialisation des données ──────────────────────────────────────────────
+// Lancée immédiatement au démarrage du module. Toutes les requêtes attendent
+// via le middleware ci-dessous avant d'être traitées.
+const _initPromise = (async () => {
+  try {
+    await ensureDataDir();
+    if (!IS_VERCEL) {
+      await fs.mkdir(config.paths.logs, { recursive: true });
+      await fs.mkdir(config.paths.uploads, { recursive: true });
+    }
+    await initializeSuperAdmins();
+    if (!IS_VERCEL) {
+      logger.info('Initialisation terminée.');
+    }
+  } catch (err) {
+    console.error('Erreur initialisation:', err);
+  }
+})();
+
+// ── Application Express ─────────────────────────────────────────────────────
+const app = express();
+
+// Middleware d'attente d'initialisation — DOIT être en premier
+// Bloque chaque requête jusqu'à ce que les données soient prêtes.
+app.use(async (req, res, next) => {
+  try { await _initPromise; } catch {}
+  next();
+});
 
 // Security headers
 app.use(helmet({
@@ -81,10 +109,10 @@ app.use(session({
 // Request logging
 app.use(requestLogger);
 
-// Static files
+// Fichiers statiques
 app.use(express.static(config.paths.public, { etag: true, maxAge: '1h' }));
 
-// API Routes
+// ── Routes API ──────────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/members', memberRoutes);
@@ -123,26 +151,9 @@ app.get('*', (req, res, next) => {
 // Error handler
 app.use(errorHandler);
 
-// Initialisation (données + super admins)
-let initialized = false;
-async function initialize() {
-  if (initialized) return;
-  initialized = true;
-  try {
-    await ensureDataDir();
-    if (!IS_VERCEL) {
-      await fs.mkdir(config.paths.logs, { recursive: true });
-      await fs.mkdir(config.paths.uploads, { recursive: true });
-    }
-    await initializeSuperAdmins();
-  } catch (err) {
-    console.error('Erreur initialisation:', err);
-  }
-}
-
-// En local : démarrer le serveur HTTP classique
+// ── Démarrage local (hors Vercel) ───────────────────────────────────────────
 if (!IS_VERCEL) {
-  initialize().then(() => {
+  _initPromise.then(() => {
     const PORT = config.app.port;
     app.listen(PORT, () => {
       console.log('\n╔════════════════════════════════════════╗');
@@ -157,13 +168,8 @@ if (!IS_VERCEL) {
     console.error('Erreur au démarrage:', err);
     process.exit(1);
   });
-} else {
-  // Sur Vercel : initialisation au premier appel
-  const _originalHandler = app.handle.bind(app);
-  app.handle = async (req, res) => {
-    await initialize();
-    _originalHandler(req, res);
-  };
 }
 
+// Export pour Vercel (module.exports = app suffit,
+// Vercel appelle directement app(req, res))
 module.exports = app;

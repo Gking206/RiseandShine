@@ -366,3 +366,23 @@
 [2026-05-29T15:05:26.876Z] [INFO] GET /api/users?page=1&limit=20 200 21ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
 [2026-05-29T15:29:49.762Z] [INFO] Serveur démarré sur le port 3000
 [2026-05-29T15:34:54.259Z] [INFO] Serveur démarré sur le port 3000
+[2026-05-29T15:43:00.466Z] [INFO] Serveur démarré sur le port 3000
+[2026-05-29T15:43:04.720Z] [INFO] GET / 200 93ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:04.868Z] [INFO] GET /css/style.css 200 14ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:04.870Z] [INFO] GET /js/app.js 200 16ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:05.207Z] [INFO] GET /api/events?upcoming=true&limit=3 401 4ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:05.241Z] [INFO] GET /favicon.ico 200 8ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:08.037Z] [INFO] GET /login.html 200 2ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:08.117Z] [INFO] POST /api/auth/logout 401 6ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:08.158Z] [INFO] GET /favicon.ico 304 8ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:30.838Z] [INFO] POST /api/auth/login 200 1379ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:31.432Z] [INFO] GET /dashboard.html 200 68ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:31.470Z] [INFO] GET /api/auth/me 200 36ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:43:31.542Z] [INFO] GET /api/notifications 200 30ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:43:31.603Z] [INFO] GET /favicon.ico 304 35ms | {"userId":"anonymous","ip":"::1"}
+[2026-05-29T15:43:31.619Z] [INFO] GET /api/users/analytics 200 51ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:43:31.734Z] [INFO] GET /api/notifications/announcements 200 20ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:43:31.768Z] [INFO] GET /api/events?upcoming=true&limit=3 200 26ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:43:31.817Z] [INFO] GET /api/testimonies?limit=3 200 37ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:47:58.876Z] [INFO] Initialisation terminée.
+[2026-05-29T15:47:58.876Z] [INFO] Serveur démarré sur le port 3000
