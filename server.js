@@ -48,6 +48,12 @@ const _initPromise = (async () => {
 // ── Application Express ─────────────────────────────────────────────────────
 const app = express();
 
+// Faire confiance au proxy de Render/Vercel pour les cookies HTTPS
+// (sans cela, secure:true bloque les cookies derrière un reverse proxy)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Middleware d'attente d'initialisation — DOIT être en premier
 // Bloque chaque requête jusqu'à ce que les données soient prêtes.
 app.use(async (req, res, next) => {

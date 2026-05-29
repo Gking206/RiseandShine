@@ -386,3 +386,5 @@
 [2026-05-29T15:43:31.817Z] [INFO] GET /api/testimonies?limit=3 200 37ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
 [2026-05-29T15:47:58.876Z] [INFO] Initialisation terminée.
 [2026-05-29T15:47:58.876Z] [INFO] Serveur démarré sur le port 3000
+[2026-05-29T16:09:50.012Z] [INFO] Initialisation terminée.
+[2026-05-29T16:09:50.013Z] [INFO] Serveur démarré sur le port 3000
