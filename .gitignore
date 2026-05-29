@@ -1,0 +1,21 @@
+# Dépendances
+node_modules/
+
+# Données locales (recréées automatiquement au démarrage)
+data/*.json
+data/backups/
+data/sessions/
+logs/
+
+# Variables d'environnement
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads utilisateurs (à gérer via stockage externe en prod)
+public/uploads/*
+!public/uploads/.gitkeep

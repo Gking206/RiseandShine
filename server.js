@@ -2,7 +2,6 @@
 
 const express = require('express');
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -26,18 +25,16 @@ const teachingRoutes = require('./routes/teachingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
+const IS_VERCEL = !!process.env.VERCEL;
 
 // Security headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Allow inline scripts for frontend
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
 
 // CORS
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+app.use(cors({ origin: true, credentials: true }));
 
 // Rate limiting
 const globalLimiter = rateLimit({
@@ -62,17 +59,22 @@ app.use(globalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session avec persistance sur disque (survit aux redémarrages)
-const sessionStorePath = path.join(__dirname, 'data', 'sessions');
+// Session — FileStore en local, MemoryStore sur Vercel
+let sessionStore;
+if (!IS_VERCEL) {
+  const FileStore = require('session-file-store')(session);
+  sessionStore = new FileStore({
+    path: path.join(config.paths.data, 'sessions'),
+    ttl: 3600,
+    retries: 1,
+    reapInterval: 3600,
+    logFn: () => {},
+  });
+}
+
 app.use(session({
   ...config.session,
-  store: new FileStore({
-    path: sessionStorePath,
-    ttl: 3600,           // 1 heure (3600 secondes)
-    retries: 1,
-    reapInterval: 3600, // Nettoyage toutes les heures
-    logFn: () => {},    // Silencieux
-  }),
+  ...(sessionStore ? { store: sessionStore } : {}),
   rolling: true,
 }));
 
@@ -80,10 +82,7 @@ app.use(session({
 app.use(requestLogger);
 
 // Static files
-app.use(express.static(config.paths.public, {
-  etag: true,
-  maxAge: '1h',
-}));
+app.use(express.static(config.paths.public, { etag: true, maxAge: '1h' }));
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -103,11 +102,12 @@ app.get('/api/health', (req, res) => {
     status: 'operational',
     app: config.app.name,
     version: config.app.version,
+    environment: IS_VERCEL ? 'vercel' : config.app.env,
     timestamp: new Date().toISOString(),
   });
 });
 
-// SPA fallback - serve index for non-API routes
+// SPA fallback
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
   const filePath = path.join(config.paths.public, req.path);
@@ -123,18 +123,26 @@ app.get('*', (req, res, next) => {
 // Error handler
 app.use(errorHandler);
 
-// Initialize and start
+// Initialisation (données + super admins)
+let initialized = false;
 async function initialize() {
+  if (initialized) return;
+  initialized = true;
   try {
-    // Ensure directories exist
     await ensureDataDir();
-    await fs.mkdir(config.paths.logs, { recursive: true });
-    await fs.mkdir(config.paths.uploads, { recursive: true });
-
-    // Seed super admins
+    if (!IS_VERCEL) {
+      await fs.mkdir(config.paths.logs, { recursive: true });
+      await fs.mkdir(config.paths.uploads, { recursive: true });
+    }
     await initializeSuperAdmins();
+  } catch (err) {
+    console.error('Erreur initialisation:', err);
+  }
+}
 
-    // Start server
+// En local : démarrer le serveur HTTP classique
+if (!IS_VERCEL) {
+  initialize().then(() => {
     const PORT = config.app.port;
     app.listen(PORT, () => {
       console.log('\n╔════════════════════════════════════════╗');
@@ -145,12 +153,17 @@ async function initialize() {
       console.log('╚════════════════════════════════════════╝\n');
       logger.info(`Serveur démarré sur le port ${PORT}`);
     });
-  } catch (err) {
+  }).catch(err => {
     console.error('Erreur au démarrage:', err);
     process.exit(1);
-  }
+  });
+} else {
+  // Sur Vercel : initialisation au premier appel
+  const _originalHandler = app.handle.bind(app);
+  app.handle = async (req, res) => {
+    await initialize();
+    _originalHandler(req, res);
+  };
 }
-
-initialize();
 
 module.exports = app;

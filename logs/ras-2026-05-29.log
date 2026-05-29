@@ -364,3 +364,5 @@
 [2026-05-29T15:05:26.825Z] [INFO] GET /favicon.ico 304 30ms | {"userId":"anonymous","ip":"::1"}
 [2026-05-29T15:05:26.844Z] [INFO] GET /api/notifications 304 35ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
 [2026-05-29T15:05:26.876Z] [INFO] GET /api/users?page=1&limit=20 200 21ms | {"userId":"31ac5a81-d13b-4cad-8505-082f7ebe3d10","ip":"::1"}
+[2026-05-29T15:29:49.762Z] [INFO] Serveur démarré sur le port 3000
+[2026-05-29T15:34:54.259Z] [INFO] Serveur démarré sur le port 3000

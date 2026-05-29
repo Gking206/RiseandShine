@@ -3,7 +3,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const logsDir = path.join(__dirname, '..', 'logs');
+const logsDir = require('../config/appConfig').paths.logs;
 
 const LEVELS = { ERROR: 'ERROR', WARN: 'WARN', INFO: 'INFO', DEBUG: 'DEBUG' };
 

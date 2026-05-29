@@ -1,15 +1,31 @@
 {
   "version": 2,
+  "name": "rise-and-shine",
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "public/**",
+          "config/**",
+          "controllers/**",
+          "middleware/**",
+          "routes/**",
+          "services/**",
+          "utils/**"
+        ]
+      }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["cdg1"]
 }

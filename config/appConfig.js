@@ -2,6 +2,11 @@
 
 const path = require('path');
 
+// Sur Vercel, le système de fichiers est en lecture seule sauf /tmp
+const IS_VERCEL = !!process.env.VERCEL;
+const DATA_ROOT = IS_VERCEL ? '/tmp/ras-data' : path.join(__dirname, '..', 'data');
+const LOGS_ROOT = IS_VERCEL ? '/tmp/ras-logs' : path.join(__dirname, '..', 'logs');
+
 const config = {
   app: {
     name: 'Rise And Shine Platform',
@@ -11,11 +16,11 @@ const config = {
   },
 
   paths: {
-    data: path.join(__dirname, '..', 'data'),
+    data: DATA_ROOT,
     public: path.join(__dirname, '..', 'public'),
     uploads: path.join(__dirname, '..', 'public', 'uploads'),
-    logs: path.join(__dirname, '..', 'logs'),
-    backups: path.join(__dirname, '..', 'data', 'backups'),
+    logs: LOGS_ROOT,
+    backups: path.join(DATA_ROOT, 'backups'),
   },
 
   session: {

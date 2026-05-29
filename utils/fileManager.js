@@ -4,7 +4,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const { safeParseJSON } = require('./jsonValidator');
 
-const dataDir = path.join(__dirname, '..', 'data');
+// Chemin résolu dynamiquement pour supporter Vercel (/tmp) et local
+const dataDir = require('../config/appConfig').paths.data;
 
 async function ensureDataDir() {
   await fs.mkdir(dataDir, { recursive: true });
