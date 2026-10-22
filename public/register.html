@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscription — Rise And Shine</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/css/style.css">
   <style>
     .auth-card { max-width: 560px; }
@@ -21,12 +22,12 @@
 
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-icon">🌟</div>
+      <img src="/images/logo.png" alt="Rise And Shine" class="auth-logo-icon logo-img">
       <div class="auth-title">Rejoindre RAS</div>
       <div class="auth-subtitle">Créez votre compte Rise And Shine</div>
     </div>
 
-    <form id="registerForm" novalidate>
+    <form id="registerForm" novalidate onsubmit="event.preventDefault()">
       <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
         <div class="form-group">
           <label class="form-label">Nom Complet <span class="required">*</span></label>

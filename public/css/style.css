@@ -244,6 +244,27 @@ p { color: var(--text-secondary); }
   50% { box-shadow: 0 0 25px rgba(255,215,0,0.6), 0 0 50px rgba(255,140,0,0.2); }
 }
 
+/* Logo image officiel (fond blanc d'origine conservé dans une pastille) */
+.logo-img {
+  display: block;
+  background: #ffffff;
+  object-fit: contain;
+  padding: 2px;
+  animation: none;
+  flex-shrink: 0;
+}
+.sidebar-logo .logo-img {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+}
+.auth-logo-icon.logo-img {
+  width: 110px;
+  height: 110px;
+  border-radius: var(--radius-xl);
+  padding: 4px;
+}
+
 .logo-text { overflow: hidden; }
 .logo-main {
   display: block;

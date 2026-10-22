@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('./fileDatabaseService');
+const db = require('./db');
 const config = require('../config/appConfig');
 
 async function getDashboardStats(userId, role) {

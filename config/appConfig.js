@@ -2,6 +2,10 @@
 
 const path = require('path');
 
+// Charger le fichier .env s'il existe (Node 22 : sans dépendance externe).
+// Les variables déjà définies dans l'environnement (hPanel Hostinger) restent prioritaires.
+try { process.loadEnvFile(path.join(__dirname, '..', '.env')); } catch {}
+
 // Sur Vercel, le système de fichiers est en lecture seule sauf /tmp
 const IS_VERCEL = !!process.env.VERCEL;
 const DATA_ROOT = IS_VERCEL ? '/tmp/ras-data' : path.join(__dirname, '..', 'data');
@@ -28,7 +32,11 @@ const config = {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      // 'auto' : cookie sécurisé uniquement si la requête arrive en HTTPS
+      // (via le proxy de l'hébergeur). Avec `true`, le navigateur ne recevait
+      // pas le cookie quand le proxy n'était pas reconnu, ce qui renvoyait
+      // l'utilisateur sur la page de connexion juste après s'être connecté.
+      secure: 'auto',
       httpOnly: true,
       maxAge: 3600 * 1000, // 1 heure (3600 secondes)
       sameSite: 'lax',
@@ -40,14 +48,38 @@ const config = {
     saltRounds: 12,
     maxLoginAttempts: 5,
     lockDuration: 15 * 60 * 1000, // 15 minutes
+    // Limite globale appliquée aux seules routes /api (pas aux fichiers statiques).
+    // Chaque page du tableau de bord déclenche plusieurs appels API.
     rateLimit: {
       windowMs: 15 * 60 * 1000,
-      max: 100,
+      max: 1000,
     },
+    // Limite appliquée uniquement aux tentatives de connexion / inscription échouées
     authRateLimit: {
       windowMs: 15 * 60 * 1000,
-      max: 10,
+      max: 20,
     },
+  },
+
+  db: {
+    enabled: !!process.env.DB_HOST,
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    name: process.env.DB_NAME,
+    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
+  },
+
+  mail: {
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '465', 10),
+    secure: (process.env.SMTP_SECURE || 'true') !== 'false',
+    user: process.env.SMTP_USER,
+    password: process.env.SMTP_PASSWORD,
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    supportEmail: process.env.SUPPORT_EMAIL || 'riseandshinebf@gmail.com',
+    appUrl: process.env.APP_URL || '',
   },
 
   roles: {
@@ -92,7 +124,12 @@ const config = {
     ANNOUNCEMENTS: 'announcements',
     LOGS: 'logs',
     ASSIGNMENTS: 'assignments',
+    SETTINGS: 'settings',
+    SUPPORT_REQUESTS: 'support_requests',
   },
+
+  // Liens réseaux sociaux modifiables par le Super Admin
+  socialNetworks: ['facebook', 'instagram', 'youtube', 'tiktok', 'whatsapp'],
 
   upload: {
     maxSize: 10 * 1024 * 1024, // 10MB

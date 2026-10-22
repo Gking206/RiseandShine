@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
 const notifService = require('../services/notificationService');
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const config = require('../config/appConfig');
 const { requireAdmin } = require('../middleware/roleMiddleware');
 

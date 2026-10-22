@@ -1,8 +1,9 @@
 'use strict';
 
 const authService = require('../services/authService');
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const notifService = require('../services/notificationService');
+const mailService = require('../services/mailService');
 const config = require('../config/appConfig');
 const { generateId } = require('../utils/idGenerator');
 const logger = require('../utils/logger');
@@ -80,9 +81,13 @@ async function register(req, res) {
     const { password: _pwd, ...safeUser } = user;
     await authService.createSession(req, user);
 
+    const emailEnvoye = await mailService.sendRegistrationConfirmation(user);
+
     res.status(201).json({
       success: true,
-      message: 'Inscription réussie. Bienvenue dans Rise And Shine!',
+      message: emailEnvoye
+        ? 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé.'
+        : 'Inscription réussie. Bienvenue dans Rise And Shine!',
       user: safeUser,
     });
   } catch (err) {
@@ -151,9 +156,9 @@ async function login(req, res) {
 
 async function logout(req, res) {
   try {
-    if (req.user) {
+    if (req.session && req.session.userId) {
       await db.create(config.collections.LOGS, {
-        userId: req.user.id,
+        userId: req.session.userId,
         action: 'deconnexion',
         details: {},
       });

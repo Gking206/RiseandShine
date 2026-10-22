@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion — Rise And Shine</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="auth-layout">
@@ -15,12 +16,12 @@
 
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-icon">✦</div>
+      <img src="/images/logo.png" alt="Rise And Shine" class="auth-logo-icon logo-img">
       <div class="auth-title">Rise And Shine</div>
       <div class="auth-subtitle">Connectez-vous à votre espace</div>
     </div>
 
-    <form id="loginForm" novalidate>
+    <form id="loginForm" novalidate onsubmit="event.preventDefault()">
       <div class="form-group">
         <label class="form-label">Adresse Email <span class="required">*</span></label>
         <div class="input-group">

@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Paramètres — Rise And Shine</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="dashboard-layout">
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <div class="sidebar-logo"><img src="/images/logo.png" alt="Rise And Shine" class="logo-icon logo-img"><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-label">Navigation</div>
@@ -91,8 +92,11 @@
           </div>
 
           <!-- Social Media Links (Super Admin) -->
-          <div class="card" data-role="super_admin" id="socialCard">
-            <h4 style="margin-bottom:var(--space-5);">🌐 Réseaux Sociaux RAS</h4>
+          <div class="card" id="socialCard">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-5);">
+              <h4>🌐 Réseaux Sociaux RAS</h4>
+              <a href="/admin.html#socialLinksForm" class="btn btn-sm btn-secondary" data-role="super_admin">✏ Modifier</a>
+            </div>
             <p class="text-muted text-sm" style="margin-bottom:var(--space-4);">Liens vers les réseaux officiels du mouvement.</p>
             <div class="social-hub" style="flex-direction:column;">
               <a href="#" class="social-btn facebook" style="justify-content:flex-start;">📘 Facebook — Rise And Shine</a>
@@ -132,10 +136,6 @@
       if (RAS.currentUser) {
         const badge = document.getElementById('userRoleBadge');
         if (badge) badge.innerHTML = Utils.roleBadge(RAS.currentUser.role);
-        if (RAS.currentUser.role !== 'super_admin') {
-          const sc = document.getElementById('socialCard');
-          if (sc) sc.style.display = 'none';
-        }
       }
     });
   </script>

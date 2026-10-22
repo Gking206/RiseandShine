@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const config = require('../config/appConfig');
 
 async function listTeachings(req, res) {

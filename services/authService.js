@@ -2,7 +2,7 @@
 
 const bcrypt = require('bcryptjs');
 const config = require('../config/appConfig');
-const db = require('./fileDatabaseService');
+const db = require('./db');
 
 const loginAttempts = new Map();
 
@@ -54,16 +54,21 @@ async function findUserByEmail(email) {
 }
 
 function createSession(req, user) {
-  req.session.userId = user.id;
-  req.session.role = user.role;
-  req.session.email = user.email;
-  req.session.nom = user.nom;
-  req.session.createdAt = new Date().toISOString();
-  // Sauvegarder explicitement la session pour garantir la persistance
   return new Promise((resolve, reject) => {
-    req.session.save(err => {
-      if (err) reject(err);
-      else resolve();
+    // Nouvel identifiant de session à chaque connexion (anti fixation de session)
+    req.session.regenerate(regenErr => {
+      if (regenErr) return reject(regenErr);
+      req.session.userId = user.id;
+      req.session.role = user.role;
+      req.session.email = user.email;
+      req.session.nom = user.nom;
+      req.session.createdAt = new Date().toISOString();
+      // Sauvegarder explicitement avant de répondre, pour que la page suivante
+      // trouve la session (sinon retour à la page de connexion).
+      req.session.save(err => {
+        if (err) reject(err);
+        else resolve();
+      });
     });
   });
 }

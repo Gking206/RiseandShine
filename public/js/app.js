@@ -28,12 +28,18 @@ const API = {
       opts.body = body;
     }
 
+    let res;
     try {
-      const res = await fetch(RAS.baseUrl + path, opts);
-      const data = await res.json();
-      return { ok: res.ok, status: res.status, data };
+      res = await fetch(RAS.baseUrl + path, opts);
     } catch (err) {
       return { ok: false, status: 0, data: { success: false, message: 'Erreur de connexion au serveur.' } };
+    }
+    try {
+      const data = await res.json();
+      return { ok: res.ok, status: res.status, data };
+    } catch {
+      // Réponse non JSON (ex. page d'erreur du proxy de l'hébergeur)
+      return { ok: false, status: res.status, data: { success: false, message: `Erreur serveur (${res.status}).` } };
     }
   },
 
@@ -46,10 +52,16 @@ const API = {
 // ── 3. Auth Module ─────────────────────────────────────────
 const Auth = {
   async check() {
-    const res = await API.get('/auth/me');
-    if (res.ok && res.data.success) {
-      RAS.currentUser = res.data.user;
-      return res.data.user;
+    // Réessayer en cas d'erreur réseau ou serveur momentanée (redémarrage,
+    // limite de requêtes) : seule une réponse 401 signifie « non connecté ».
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await API.get('/auth/me');
+      if (res.ok && res.data.success) {
+        RAS.currentUser = res.data.user;
+        return res.data.user;
+      }
+      if (res.status === 401 || res.status === 403) return null;
+      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     }
     return null;
   },
@@ -1893,6 +1905,37 @@ const Landing = {
   },
 };
 
+// ── 24b. Liens Réseaux Sociaux ────────────────────────────
+// Les liens sont gérés par le Super Admin (page admin.html) et appliqués
+// à tous les boutons .social-btn.<réseau> du site.
+const SocialLinks = {
+  networks: ['facebook', 'instagram', 'youtube', 'tiktok', 'whatsapp'],
+
+  async fetch() {
+    const res = await API.get('/settings/social');
+    return res.ok && res.data.links ? res.data.links : null;
+  },
+
+  async apply() {
+    if (!document.querySelector('.social-btn')) return;
+    const links = await this.fetch();
+    if (!links) return;
+    this.networks.forEach(network => {
+      document.querySelectorAll(`.social-btn.${network}`).forEach(btn => {
+        const url = links[network];
+        if (url) {
+          btn.href = url;
+          btn.target = '_blank';
+          btn.rel = 'noopener noreferrer';
+          btn.style.display = '';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+    });
+  },
+};
+
 // ── 25. Page Router ───────────────────────────────────────
 const Router = {
   async init() {
@@ -1911,11 +1954,12 @@ const Router = {
       }
     }
 
+    SocialLinks.apply();
+
     if (page === 'login.html') {
-      // Toujours détruire la session existante et afficher le formulaire.
-      // Ne jamais rediriger automatiquement depuis la page de connexion.
-      await API.post('/auth/logout').catch(() => {});
-      RAS.currentUser = null;
+      // Brancher le formulaire immédiatement : auparavant, un appel à
+      // /auth/logout était attendu d'abord, et une soumission rapide
+      // rechargeait simplement la page de connexion.
       this.initLogin();
     } else if (page === 'register.html') {
       const user = await Auth.check();
@@ -1967,6 +2011,8 @@ const Router = {
         RAS.currentUser = res.data.user;
         Toast.success(res.data.message);
         setTimeout(() => { window.location.href = '/dashboard.html'; }, 500);
+      } else if (res.status === 0) {
+        Toast.error('Serveur injoignable. Vérifiez votre connexion et réessayez.');
       } else {
         Toast.error(res.data.message || 'Erreur de connexion.');
         const passInput = form.querySelector('[name="password"]');
@@ -2048,5 +2094,6 @@ window.Teachings = Teachings;
 window.Gallery = Gallery;
 window.AdminUsers = AdminUsers;
 window.Settings = Settings;
+window.SocialLinks = SocialLinks;
 window.Notifications = Notifications;
 window.Utils = Utils;

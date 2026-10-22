@@ -74,5 +74,61 @@
     },
     "createdAt": "2026-05-29T15:43:30.748Z",
     "updatedAt": "2026-05-29T15:43:30.748Z"
+  },
+  {
+    "id": "e3f7ac3a-c85b-45e3-b5b2-1440d4a60007",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-10-22T15:19:37.295Z",
+    "updatedAt": "2026-10-22T15:19:37.295Z"
+  },
+  {
+    "id": "0afe8d98-a10a-4822-9906-d305110a23a1",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-10-22T15:19:43.567Z",
+    "updatedAt": "2026-10-22T15:19:43.567Z"
+  },
+  {
+    "id": "2cdee7a0-2974-48fb-bc46-512864252f1b",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "deconnexion",
+    "details": {},
+    "createdAt": "2026-10-22T15:19:47.192Z",
+    "updatedAt": "2026-10-22T15:19:47.192Z"
+  },
+  {
+    "id": "6f2eae92-bdae-4dbf-8d52-bf81f3aea969",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-10-22T15:19:50.579Z",
+    "updatedAt": "2026-10-22T15:19:50.579Z"
+  },
+  {
+    "id": "17cbd4cd-2828-4405-a93d-2b5e196fae57",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "deconnexion",
+    "details": {},
+    "createdAt": "2026-10-22T15:50:55.152Z",
+    "updatedAt": "2026-10-22T15:50:55.152Z"
+  },
+  {
+    "id": "cd49e332-3501-49cc-9e03-cd6ae3126708",
+    "userId": "31ac5a81-d13b-4cad-8505-082f7ebe3d10",
+    "action": "connexion",
+    "details": {
+      "ip": "::1"
+    },
+    "createdAt": "2026-10-22T15:50:57.445Z",
+    "updatedAt": "2026-10-22T15:50:57.445Z"
   }
 ]

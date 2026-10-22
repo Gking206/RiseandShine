@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const notifService = require('../services/notificationService');
 const analyticsService = require('../services/analyticsService');
 const config = require('../config/appConfig');

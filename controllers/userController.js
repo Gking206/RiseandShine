@@ -1,8 +1,9 @@
 'use strict';
 
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const authService = require('../services/authService');
 const notifService = require('../services/notificationService');
+const mailService = require('../services/mailService');
 const config = require('../config/appConfig');
 const logger = require('../utils/logger');
 
@@ -262,6 +263,7 @@ async function createUser(req, res) {
     }
 
     await notifService.notifyUser(user.id, `Bienvenue sur Rise And Shine, ${user.nom} ! Votre compte a été créé.`, 'bienvenue');
+    await mailService.sendRegistrationConfirmation(user);
 
     const roleLabel = userRole === 'admin' ? 'Administrateur' : userRole === 'super_admin' ? 'Super Admin' : 'Membre';
     const { password: _pwd, ...safeUser } = user;

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestion Admin — Rise And Shine</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/css/style.css">
   <style>
     .creation-grid {
@@ -64,7 +65,7 @@
 <body class="dashboard-layout">
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><div class="logo-icon">✦</div><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
+    <div class="sidebar-logo"><img src="/images/logo.png" alt="Rise And Shine" class="logo-icon logo-img"><div class="logo-text"><span class="logo-main">RISE AND SHINE</span><span class="logo-sub">Ministry Platform</span></div></div>
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-label">Navigation</div>
@@ -170,6 +171,41 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- ── LIENS RÉSEAUX SOCIAUX ── -->
+      <div class="card" style="margin-bottom:var(--space-6);">
+        <div class="section-header" style="margin-bottom:var(--space-5);">
+          <div>
+            <div class="section-title">🌐 Liens des Réseaux Sociaux</div>
+            <div class="section-subtitle">Ces liens s'affichent sur la page d'accueil et dans les paramètres. Laissez un champ vide pour masquer le bouton.</div>
+          </div>
+        </div>
+        <form id="socialLinksForm" novalidate>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">📘 Facebook</label>
+              <input type="url" name="facebook" class="form-input" placeholder="https://www.facebook.com/...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">🎵 TikTok</label>
+              <input type="url" name="tiktok" class="form-input" placeholder="https://www.tiktok.com/@...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">📸 Instagram</label>
+              <input type="url" name="instagram" class="form-input" placeholder="https://www.instagram.com/...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">▶ YouTube</label>
+              <input type="url" name="youtube" class="form-input" placeholder="https://www.youtube.com/@...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">💬 WhatsApp (groupe ou chaîne)</label>
+              <input type="url" name="whatsapp" class="form-input" placeholder="https://chat.whatsapp.com/... ou https://wa.me/226...">
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" id="saveSocialBtn" onclick="saveSocialLinks()">💾 Enregistrer les liens</button>
+        </form>
       </div>
 
       <!-- ── GESTION DES UTILISATEURS ── -->
@@ -480,6 +516,34 @@
       if (input) input.type = input.type === 'password' ? 'text' : 'password';
     }
 
+    // ── Liens réseaux sociaux ──────────────────────────────────
+    async function loadSocialLinks() {
+      const form = document.getElementById('socialLinksForm');
+      const links = await SocialLinks.fetch();
+      if (form && links) Forms.setData(form, links);
+    }
+
+    async function saveSocialLinks() {
+      const form = document.getElementById('socialLinksForm');
+      if (!form) return;
+      const data = Forms.getData(form);
+      for (const [network, url] of Object.entries(data)) {
+        if (url && !/^https?:\/\//i.test(url.trim())) {
+          Toast.error(`Le lien ${network} doit commencer par https://`); return;
+        }
+      }
+      const btn = document.getElementById('saveSocialBtn');
+      Loader.button(btn, true);
+      const res = await API.put('/settings/social', data);
+      Loader.button(btn, false);
+      if (res.ok) {
+        Toast.success(res.data.message);
+        Forms.setData(form, res.data.links);
+      } else {
+        Toast.error(res.data.message || 'Erreur lors de l\'enregistrement.');
+      }
+    }
+
     // ── Init ───────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       if (RAS.currentUser && RAS.currentUser.role !== 'super_admin') {
@@ -487,6 +551,7 @@
         return;
       }
       refreshUserCount();
+      loadSocialLinks();
     });
   </script>
 </body>

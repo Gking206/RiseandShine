@@ -71,6 +71,10 @@ const schemas = {
     titre: { required: true, minLength: 3, maxLength: 200 },
     contenu: { required: true, minLength: 10, maxLength: 5000 },
   },
+  support: {
+    sujet: { required: true, minLength: 3, maxLength: 200 },
+    message: { required: true, minLength: 10, maxLength: 5000 },
+  },
   teaching: {
     titre: { required: true, minLength: 3, maxLength: 200 },
     type: { required: true, enum: ['pdf', 'video', 'audio', 'image', 'lien', 'texte'] },

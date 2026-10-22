@@ -1,7 +1,7 @@
 'use strict';
 
 const logger = require('../utils/logger');
-const db = require('../services/fileDatabaseService');
+const db = require('../services/db');
 const config = require('../config/appConfig');
 
 function requestLogger(req, res, next) {
