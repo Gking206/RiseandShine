@@ -3,7 +3,13 @@
 function validateBody(schema) {
   return (req, res, next) => {
     const errors = [];
+    req.body = req.body || {};
     for (const [field, rules] of Object.entries(schema)) {
+      // Retirer les espaces ajoutés par l'autocomplétion des téléphones
+      // (ex. « jean@gmail.com ») — sauf pour les mots de passe.
+      if (typeof req.body[field] === 'string' && !/password|motdepasse/i.test(field)) {
+        req.body[field] = req.body[field].trim();
+      }
       const val = req.body[field];
       if (rules.required && (val === undefined || val === null || val === '')) {
         errors.push(`Le champ "${field}" est requis`);

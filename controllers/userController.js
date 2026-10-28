@@ -263,7 +263,7 @@ async function createUser(req, res) {
     }
 
     await notifService.notifyUser(user.id, `Bienvenue sur Rise And Shine, ${user.nom} ! Votre compte a été créé.`, 'bienvenue');
-    await mailService.sendRegistrationConfirmation(user);
+    mailService.sendRegistrationConfirmation(user).catch(() => {}); // en arrière-plan
 
     const roleLabel = userRole === 'admin' ? 'Administrateur' : userRole === 'super_admin' ? 'Super Admin' : 'Membre';
     const { password: _pwd, ...safeUser } = user;

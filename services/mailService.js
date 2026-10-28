@@ -22,6 +22,11 @@ function getTransporter() {
       port: m.port,
       secure: m.secure,
       auth: { user: m.user, pass: m.password },
+      // Sans ces délais, un serveur SMTP injoignable bloque l'envoi jusqu'à
+      // 2 minutes (valeur par défaut de nodemailer).
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
     });
   }
   return transporter;

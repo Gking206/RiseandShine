@@ -2077,8 +2077,11 @@ const Router = {
     if (!form) return;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const terms = document.getElementById('acceptTerms');
+      if (terms && !terms.checked) return; // message affiché par register.html
       const data = Forms.getData(form);
       const btn = form.querySelector('[type="submit"]');
+      if (btn.disabled) return; // éviter le double envoi
       Loader.button(btn, true);
       const res = await Auth.register(data);
       Loader.button(btn, false);

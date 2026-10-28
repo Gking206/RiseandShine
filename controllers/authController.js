@@ -13,9 +13,10 @@ async function register(req, res) {
     // adminId n'est volontairement pas lu : une inscription publique ne doit pas
     // pouvoir choisir (ni deviner) un administrateur. Seul le Super Admin assigne
     // manuellement, via POST /api/users.
-    const { nom, email, password, telephone, sexe, age, ville } = req.body;
+    const { nom, password, telephone, sexe, age, ville } = req.body;
+    const email = String(req.body.email).toLowerCase().trim();
 
-    const exists = await db.exists(config.collections.USERS, { email: email.toLowerCase() });
+    const exists = await db.exists(config.collections.USERS, { email });
     if (exists) {
       return res.status(400).json({ success: false, message: 'Cette adresse email est déjà utilisée.' });
     }
@@ -35,7 +36,7 @@ async function register(req, res) {
     const hashedPassword = await authService.hashPassword(password);
     const user = await db.create(config.collections.USERS, {
       nom: nom.trim(),
-      email: email.toLowerCase().trim(),
+      email,
       password: hashedPassword,
       role: 'membre',
       telephone: telephone.trim(),
@@ -73,16 +74,23 @@ async function register(req, res) {
     const { password: _pwd, ...safeUser } = user;
     await authService.createSession(req, user);
 
-    const emailEnvoye = await mailService.sendRegistrationConfirmation(user);
+    // L'e-mail part en arrière-plan : le compte est créé, on répond tout de suite.
+    // Attendre l'envoi faisait expirer la requête quand le SMTP était lent,
+    // et la personne voyait une erreur alors que son compte existait déjà.
+    const emailPrevu = mailService.isConfigured();
+    mailService.sendRegistrationConfirmation(user).catch(() => {});
 
     res.status(201).json({
       success: true,
-      message: emailEnvoye
-        ? 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé.'
+      message: emailPrevu
+        ? 'Inscription réussie ! Un e-mail de confirmation va vous être envoyé.'
         : 'Inscription réussie. Bienvenue dans Rise And Shine!',
       user: safeUser,
     });
   } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ success: false, message: 'Cette adresse email est déjà utilisée.' });
+    }
     logger.error('Erreur inscription', { error: err.message });
     res.status(500).json({ success: false, message: 'Erreur lors de l\'inscription.' });
   }
