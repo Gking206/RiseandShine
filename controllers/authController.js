@@ -48,51 +48,62 @@ async function register(req, res) {
       adminId: assignedAdminId || null,
     });
 
-    // Create member profile
-    await db.create(config.collections.MEMBERS, {
-      userId: user.id,
-      adminId: assignedAdminId || null,
-      nom: user.nom,
-      email: user.email,
-      telephone: user.telephone,
-      sexe: user.sexe,
-      age: user.age,
-      ville: user.ville,
-      statut: 'actif',
-      avatar: null,
-      notes: '',
-      baptise: false,
-      dateAdhesion: new Date().toISOString(),
-    });
-
-    // Notify admin
-    if (assignedAdminId) {
-      await notifService.notifyUser(assignedAdminId, `Nouveau membre inscrit: ${user.nom}`, 'nouveau_membre');
+    // Profil membre : indissociable du compte. En cas d'échec, on supprime le
+    // compte pour que la personne puisse réessayer (sinon « email déjà utilisé »).
+    const step = 'création du profil membre';
+    try {
+      await db.create(config.collections.MEMBERS, {
+        userId: user.id,
+        adminId: assignedAdminId || null,
+        nom: user.nom,
+        email: user.email,
+        telephone: user.telephone,
+        sexe: user.sexe,
+        age: user.age,
+        ville: user.ville,
+        statut: 'actif',
+        avatar: null,
+        notes: '',
+        baptise: false,
+        dateAdhesion: new Date().toISOString(),
+      });
+    } catch (err) {
+      await db.delete(config.collections.USERS, user.id).catch(() => {});
+      err.step = step;
+      throw err;
     }
-    await notifService.notifySuperAdmins(`Nouveau membre inscrit: ${user.nom}`, 'nouveau_membre');
 
-    const { password: _pwd, ...safeUser } = user;
-    await authService.createSession(req, user);
+    // À partir d'ici le compte existe : aucune étape suivante ne doit renvoyer
+    // une erreur à la personne qui s'inscrit.
+    try {
+      if (assignedAdminId) {
+        await notifService.notifyUser(assignedAdminId, `Nouveau membre inscrit: ${user.nom}`, 'nouveau_membre');
+      }
+      await notifService.notifySuperAdmins(`Nouveau membre inscrit: ${user.nom}`, 'nouveau_membre');
+    } catch (err) {
+      logger.error('Inscription : notifications non envoyées', { userId: user.id, error: err.message, stack: err.stack });
+    }
 
-    // L'e-mail part en arrière-plan : le compte est créé, on répond tout de suite.
-    // Attendre l'envoi faisait expirer la requête quand le SMTP était lent,
-    // et la personne voyait une erreur alors que son compte existait déjà.
+    // Pas de connexion automatique : la personne est renvoyée vers la page de
+    // connexion pour se connecter avec ses nouveaux identifiants.
+
+    // L'e-mail part en arrière-plan pour ne pas retarder la réponse.
     const emailPrevu = mailService.isConfigured();
     mailService.sendRegistrationConfirmation(user).catch(() => {});
 
+    const { password: _pwd, ...safeUser } = user;
+    const base = 'Votre compte a été créé ! Connectez-vous avec votre e-mail et votre mot de passe.';
     res.status(201).json({
       success: true,
-      message: emailPrevu
-        ? 'Inscription réussie ! Un e-mail de confirmation va vous être envoyé.'
-        : 'Inscription réussie. Bienvenue dans Rise And Shine!',
+      message: emailPrevu ? `${base} Un e-mail de confirmation va vous être envoyé.` : base,
       user: safeUser,
     });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ success: false, message: 'Cette adresse email est déjà utilisée.' });
     }
-    logger.error('Erreur inscription', { error: err.message });
-    res.status(500).json({ success: false, message: 'Erreur lors de l\'inscription.' });
+    logger.error('Erreur inscription', { step: err.step || 'avant création du compte', error: err.message, code: err.code, stack: err.stack });
+    res.status(500).json({ success: false, message: 'Erreur lors de l\'inscription. Veuillez réessayer.' });
   }
 }
 

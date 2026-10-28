@@ -34,7 +34,8 @@ async function readFile(collection) {
 async function writeFile(collection, data) {
   await ensureDataDir();
   const filePath = getFilePath(collection);
-  const tmpPath = filePath + '.tmp';
+  // Nom unique : deux écritures simultanées ne doivent pas partager le même fichier temporaire
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
   const backupPath = path.join(dataDir, 'backups', `${collection}_${Date.now()}.bak`);
 
   // Backup existing file

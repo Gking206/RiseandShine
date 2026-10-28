@@ -12,6 +12,19 @@ const { matchesQuery, applyQueryOptions } = require('../utils/queryHelpers');
 class FileDatabaseService {
   constructor() {
     this.driver = 'json';
+    this._locks = new Map();
+  }
+
+  // Exécute les lecture-modification-écriture d'une même collection l'une après
+  // l'autre. Sans ce verrou, des créations en parallèle (ex. une notification
+  // par Super Admin à chaque inscription) s'écrasaient ou échouaient (ENOENT).
+  _withLock(collection, fn) {
+    const previous = this._locks.get(collection) || Promise.resolve();
+    const run = previous.catch(() => {}).then(fn);
+    const tail = run.catch(() => {});
+    this._locks.set(collection, tail);
+    tail.then(() => { if (this._locks.get(collection) === tail) this._locks.delete(collection); });
+    return run;
   }
 
   async init() {
@@ -38,43 +51,49 @@ class FileDatabaseService {
     return data.filter(record => matchesQuery(record, query));
   }
 
-  async create(collection, recordData) {
-    const data = await readFile(collection);
-    const now = new Date().toISOString();
-    const record = {
-      id: generateId(),
-      ...sanitizeObject(recordData),
-      createdAt: now,
-      updatedAt: now,
-    };
-    data.push(record);
-    await writeFile(collection, data);
-    return record;
+  create(collection, recordData) {
+    return this._withLock(collection, async () => {
+      const data = await readFile(collection);
+      const now = new Date().toISOString();
+      const record = {
+        id: generateId(),
+        ...sanitizeObject(recordData),
+        createdAt: now,
+        updatedAt: now,
+      };
+      data.push(record);
+      await writeFile(collection, data);
+      return record;
+    });
   }
 
-  async update(collection, id, updateData) {
-    const data = await readFile(collection);
-    const index = data.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    const { id: _id, createdAt, ...safeUpdate } = sanitizeObject(updateData);
-    data[index] = {
-      ...data[index],
-      ...safeUpdate,
-      id,
-      createdAt: data[index].createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-    await writeFile(collection, data);
-    return data[index];
+  update(collection, id, updateData) {
+    return this._withLock(collection, async () => {
+      const data = await readFile(collection);
+      const index = data.findIndex(r => r.id === id);
+      if (index === -1) return null;
+      const { id: _id, createdAt, ...safeUpdate } = sanitizeObject(updateData);
+      data[index] = {
+        ...data[index],
+        ...safeUpdate,
+        id,
+        createdAt: data[index].createdAt,
+        updatedAt: new Date().toISOString(),
+      };
+      await writeFile(collection, data);
+      return data[index];
+    });
   }
 
-  async delete(collection, id) {
-    const data = await readFile(collection);
-    const index = data.findIndex(r => r.id === id);
-    if (index === -1) return false;
-    data.splice(index, 1);
-    await writeFile(collection, data);
-    return true;
+  delete(collection, id) {
+    return this._withLock(collection, async () => {
+      const data = await readFile(collection);
+      const index = data.findIndex(r => r.id === id);
+      if (index === -1) return false;
+      data.splice(index, 1);
+      await writeFile(collection, data);
+      return true;
+    });
   }
 
   async count(collection, query = {}) {

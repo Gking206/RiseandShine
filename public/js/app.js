@@ -2050,6 +2050,19 @@ const Router = {
   initLogin() {
     const form = document.getElementById('loginForm');
     if (!form) return;
+
+    // Arrivée depuis l'inscription : préremplir l'e-mail et confirmer la création
+    try {
+      const registered = JSON.parse(sessionStorage.getItem('ras.registered') || 'null');
+      if (registered) {
+        sessionStorage.removeItem('ras.registered');
+        const emailInput = form.querySelector('[name="email"]');
+        if (emailInput && registered.email) emailInput.value = String(registered.email).trim();
+        Toast.success(registered.message || 'Votre compte a été créé. Connectez-vous.', 6000);
+        const passInput = form.querySelector('[name="password"]');
+        if (passInput) passInput.focus();
+      }
+    } catch {}
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = Forms.getData(form);
@@ -2086,8 +2099,12 @@ const Router = {
       const res = await Auth.register(data);
       Loader.button(btn, false);
       if (res.ok && res.data.success) {
-        Toast.success(res.data.message);
-        setTimeout(() => { window.location.href = '/dashboard.html'; }, 800);
+        // Le message est réaffiché sur la page de connexion, avec l'e-mail prérempli
+        try {
+          sessionStorage.setItem('ras.registered', JSON.stringify({ email: data.email, message: res.data.message }));
+        } catch {}
+        Toast.success(res.data.message, 5000);
+        setTimeout(() => { window.location.href = '/login.html'; }, 1500);
       } else {
         Toast.error(res.data.message || 'Erreur lors de l\'inscription.');
       }
