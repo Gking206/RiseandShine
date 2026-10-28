@@ -204,6 +204,17 @@
             </div>
           </div>
         </div>
+
+        <!-- Liens réseaux sociaux (Super Admin uniquement) -->
+        <div class="card" id="socialLinksCard" style="display:none;margin-top:var(--space-6);">
+          <div class="section-header" style="margin-bottom:var(--space-5);">
+            <div>
+              <div class="section-title">🌐 Liens des Réseaux Sociaux</div>
+              <div class="section-subtitle">Ces liens s'affichent sur la page d'accueil et dans les paramètres. Laissez un champ vide pour masquer le bouton.</div>
+            </div>
+          </div>
+          <div id="dashSocialLinksEditor"></div>
+        </div>
       </div>
 
       <!-- ── SECTION MEMBRE SIMPLE ── -->
@@ -365,6 +376,12 @@
         document.getElementById('membreDashboard').style.display = 'none';
         if (user.role === 'super_admin') {
           document.getElementById('statFinanceCard').style.display = 'flex';
+          document.getElementById('socialLinksCard').style.display = 'block';
+          SocialLinks.renderEditor(document.getElementById('dashSocialLinksEditor'));
+          // Lien « Modifier » depuis les Paramètres : défiler jusqu'à la carte
+          if (window.location.hash === '#socialLinksCard') {
+            document.getElementById('socialLinksCard').scrollIntoView({ behavior: 'smooth' });
+          }
         }
         // Responsive grilles admin
         const chartsRow = document.querySelector('.charts-row');

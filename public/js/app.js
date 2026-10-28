@@ -1916,6 +1916,56 @@ const SocialLinks = {
     return res.ok && res.data.links ? res.data.links : null;
   },
 
+  fields: [
+    { name: 'facebook', label: '📘 Facebook', placeholder: 'https://www.facebook.com/...' },
+    { name: 'tiktok', label: '🎵 TikTok', placeholder: 'https://www.tiktok.com/@...' },
+    { name: 'instagram', label: '📸 Instagram', placeholder: 'https://www.instagram.com/...' },
+    { name: 'youtube', label: '▶ YouTube', placeholder: 'https://www.youtube.com/@...' },
+    { name: 'whatsapp', label: '💬 WhatsApp (groupe ou chaîne)', placeholder: 'https://chat.whatsapp.com/... ou https://wa.me/226...' },
+  ],
+
+  // Formulaire de modification des liens (Super Admin), inséré dans `container`.
+  // Utilisé sur le tableau de bord et sur la page Gestion Utilisateurs.
+  async renderEditor(container) {
+    if (!container) return;
+    container.innerHTML = `
+      <form class="social-links-form" novalidate onsubmit="event.preventDefault()">
+        <div class="form-grid">
+          ${this.fields.map(f => `
+            <div class="form-group">
+              <label class="form-label">${f.label}</label>
+              <input type="url" name="${f.name}" class="form-input" placeholder="${f.placeholder}">
+            </div>`).join('')}
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Enregistrer les liens</button>
+      </form>`;
+    const form = container.querySelector('form');
+    form.addEventListener('submit', () => this.save(form));
+    const links = await this.fetch();
+    if (links) Forms.setData(form, links);
+  },
+
+  async save(form) {
+    const data = Forms.getData(form);
+    for (const [network, url] of Object.entries(data)) {
+      if (url && !/^https?:\/\//i.test(url.trim())) {
+        Toast.error(`Le lien ${network} doit commencer par https://`);
+        return;
+      }
+    }
+    const btn = form.querySelector('[type="submit"]');
+    Loader.button(btn, true);
+    const res = await API.put('/settings/social', data);
+    Loader.button(btn, false);
+    if (res.ok) {
+      Toast.success(res.data.message);
+      Forms.setData(form, res.data.links);
+      this.apply();
+    } else {
+      Toast.error(res.data.message || 'Erreur lors de l\'enregistrement.');
+    }
+  },
+
   async apply() {
     if (!document.querySelector('.social-btn')) return;
     const links = await this.fetch();
@@ -2021,15 +2071,8 @@ const Router = {
     });
   },
 
-  async initRegister() {
-    // Load admins for selection
-    const res = await API.get('/auth/admins');
-    const select = document.getElementById('adminSelect');
-    if (select && res.ok) {
-      select.innerHTML = `<option value="">Assignation automatique</option>` +
-        res.data.admins.map(a => `<option value="${a.id}">${a.nom} (${a.membresActuels}/${a.limite})</option>`).join('');
-    }
-
+  initRegister() {
+    // L'administrateur est assigné automatiquement côté serveur
     const form = document.getElementById('registerForm');
     if (!form) return;
     form.addEventListener('submit', async (e) => {

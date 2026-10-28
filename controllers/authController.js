@@ -10,33 +10,25 @@ const logger = require('../utils/logger');
 
 async function register(req, res) {
   try {
-    const { nom, email, password, telephone, sexe, age, ville, adminId } = req.body;
+    // adminId n'est volontairement pas lu : une inscription publique ne doit pas
+    // pouvoir choisir (ni deviner) un administrateur. Seul le Super Admin assigne
+    // manuellement, via POST /api/users.
+    const { nom, email, password, telephone, sexe, age, ville } = req.body;
 
     const exists = await db.exists(config.collections.USERS, { email: email.toLowerCase() });
     if (exists) {
       return res.status(400).json({ success: false, message: 'Cette adresse email est déjà utilisée.' });
     }
 
-    // Find or auto-assign admin
-    let assignedAdminId = adminId;
-    if (!assignedAdminId) {
-      const admins = await db.findMany(config.collections.USERS, { role: 'admin' });
-      if (admins.length > 0) {
-        let minMembers = Infinity;
-        let selectedAdmin = null;
-        for (const admin of admins) {
-          const count = await db.count(config.collections.MEMBERS, { adminId: admin.id });
-          if (count < config.memberLimits.max && count < minMembers) {
-            minMembers = count;
-            selectedAdmin = admin;
-          }
-        }
-        if (selectedAdmin) assignedAdminId = selectedAdmin.id;
-      }
-    } else {
-      const memberCount = await db.count(config.collections.MEMBERS, { adminId: assignedAdminId });
-      if (memberCount >= config.memberLimits.max) {
-        return res.status(400).json({ success: false, message: 'Cet administrateur a atteint la limite de membres.' });
+    // Assignation automatique à l'admin ayant le moins de membres
+    let assignedAdminId = null;
+    const admins = await db.findMany(config.collections.USERS, { role: 'admin' });
+    let minMembers = Infinity;
+    for (const admin of admins) {
+      const count = await db.count(config.collections.MEMBERS, { adminId: admin.id });
+      if (count < config.memberLimits.max && count < minMembers) {
+        minMembers = count;
+        assignedAdminId = admin.id;
       }
     }
 

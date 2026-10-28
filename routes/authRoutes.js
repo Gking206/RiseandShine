@@ -6,6 +6,7 @@ const router = express.Router();
 const ctrl = require('../controllers/authController');
 const config = require('../config/appConfig');
 const { requireAuth } = require('../middleware/authMiddleware');
+const { requireSuperAdmin } = require('../middleware/roleMiddleware');
 const { validateBody, schemas } = require('../middleware/validationMiddleware');
 
 // Protège contre les attaques par force brute. Ne compte que les échecs, et ne
@@ -26,6 +27,8 @@ router.post('/logout', ctrl.logout);
 router.get('/me', requireAuth, ctrl.getMe);
 router.put('/profile', requireAuth, ctrl.updateProfile);
 router.put('/change-password', requireAuth, ctrl.changePassword);
-router.get('/admins', ctrl.getAdminsForRegistration);
+// Liste des admins (noms, identifiants, effectifs) : réservée au Super Admin,
+// qui s'en sert pour assigner un membre lors de la création d'un compte.
+router.get('/admins', requireAuth, requireSuperAdmin, ctrl.getAdminsForRegistration);
 
 module.exports = router;
