@@ -1909,3 +1909,65 @@ p { color: var(--text-secondary); }
   transform: translateY(-2px);
   box-shadow: var(--shadow-gold);
 }
+
+/* ============================================================
+   IMPORT DE FICHIERS (remplace les champs URL)
+   ============================================================ */
+.file-upload-input { display: none; }
+
+.file-upload-zone {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-5) var(--space-4);
+  border: 2px dashed var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.file-upload-zone:hover,
+.file-upload-zone.dragover {
+  border-color: var(--ras-gold);
+  background: var(--bg-glass-hover);
+}
+.file-upload-btn { font-weight: 700; color: var(--ras-gold); font-size: 0.95rem; }
+.file-upload-hint { font-size: 0.75rem; color: var(--text-muted); }
+
+.file-upload-progress { display: none; align-items: center; gap: 10px; padding: 10px 0; }
+.file-upload-progress.active { display: flex; }
+.file-upload-track {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+.file-upload-bar {
+  height: 100%;
+  width: 0;
+  background: var(--gradient-primary);
+  transition: width 0.2s ease;
+}
+.file-upload-status { font-size: 0.75rem; color: var(--text-muted); min-width: 100px; text-align: right; }
+
+.file-upload-preview:empty { display: none; }
+.file-upload-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-glass);
+}
+.file-upload-media { max-width: 100%; border-radius: var(--radius-md); }
+img.file-upload-media { max-height: 220px; object-fit: contain; align-self: center; }
+video.file-upload-media { max-height: 260px; }
+audio.file-upload-media { width: 100%; }
+.file-upload-doc { color: var(--ras-gold); font-weight: 600; word-break: break-all; }
+.file-upload-actions { display: flex; gap: 8px; flex-wrap: wrap; }

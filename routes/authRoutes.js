@@ -7,6 +7,7 @@ const ctrl = require('../controllers/authController');
 const config = require('../config/appConfig');
 const { requireAuth } = require('../middleware/authMiddleware');
 const { requireSuperAdmin } = require('../middleware/roleMiddleware');
+const { validateFileUrls } = require('../middleware/fileUrlMiddleware');
 const { validateBody, schemas } = require('../middleware/validationMiddleware');
 
 // Protège contre les attaques par force brute. Ne compte que les échecs, et ne
@@ -25,7 +26,7 @@ router.post('/register', authLimiter, validateBody(schemas.register), ctrl.regis
 router.post('/login', authLimiter, validateBody(schemas.login), ctrl.login);
 router.post('/logout', ctrl.logout);
 router.get('/me', requireAuth, ctrl.getMe);
-router.put('/profile', requireAuth, ctrl.updateProfile);
+router.put('/profile', requireAuth, validateFileUrls('avatar'), ctrl.updateProfile);
 router.put('/change-password', requireAuth, ctrl.changePassword);
 // Liste des admins (noms, identifiants, effectifs) : réservée au Super Admin,
 // qui s'en sert pour assigner un membre lors de la création d'un compte.

@@ -24,6 +24,7 @@ const teachingRoutes = require('./routes/teachingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const supportRoutes = require('./routes/supportRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const IS_VERCEL = !!process.env.VERCEL;
 
@@ -108,6 +109,9 @@ app.use(session({
 app.use(requestLogger);
 
 // Fichiers statiques
+// Fichiers importés : noms aléatoires jamais réécrits, donc cache long possible
+app.use('/uploads', express.static(config.paths.uploads, { etag: true, maxAge: '7d', index: false }));
+app.use('/uploads', (req, res) => res.status(404).end()); // pas de page d'accueil à la place d'un fichier manquant
 app.use(express.static(config.paths.public, { etag: true, maxAge: '1h' }));
 
 // ── Routes API ──────────────────────────────────────────────────────────────
@@ -133,6 +137,7 @@ app.use('/api/teachings', teachingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

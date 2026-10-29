@@ -130,7 +130,7 @@ async function listGalleries(req, res) {
 async function addGalleryItem(req, res) {
   try {
     const { titre, imageUrl, categorie, description, evenementId } = req.body;
-    if (!imageUrl) return res.status(400).json({ success: false, message: 'URL de l\'image requis.' });
+    if (!imageUrl) return res.status(400).json({ success: false, message: 'Veuillez importer une image.' });
 
     const item = await db.create(config.collections.GALLERIES, {
       titre: titre ? titre.trim() : 'Sans titre',

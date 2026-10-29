@@ -22,7 +22,11 @@ const config = {
   paths: {
     data: DATA_ROOT,
     public: path.join(__dirname, '..', 'public'),
-    uploads: path.join(__dirname, '..', 'public', 'uploads'),
+    // Fichiers importés. UPLOADS_DIR permet de les placer hors du dossier de
+    // l'application, pour qu'un redéploiement ne les efface pas.
+    uploads: process.env.UPLOADS_DIR
+      ? path.resolve(process.env.UPLOADS_DIR)
+      : path.join(__dirname, '..', 'public', 'uploads'),
     logs: LOGS_ROOT,
     backups: path.join(DATA_ROOT, 'backups'),
   },
@@ -131,12 +135,26 @@ const config = {
   // Liens réseaux sociaux modifiables par le Super Admin
   socialNetworks: ['facebook', 'instagram', 'youtube', 'tiktok', 'whatsapp'],
 
+  // Fichiers importés depuis le téléphone ou l'ordinateur.
+  // Type MIME autorisé -> extension enregistrée sur le disque, et taille maximale.
+  // (Pas de SVG ni de HTML : ils pourraient contenir du code exécuté par le navigateur.)
   upload: {
-    maxSize: 10 * 1024 * 1024, // 10MB
-    allowedImages: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-    allowedDocs: ['application/pdf'],
-    allowedAudio: ['audio/mpeg', 'audio/wav', 'audio/ogg'],
-    allowedVideo: ['video/mp4', 'video/webm'],
+    types: {
+      'image/jpeg':      { ext: '.jpg',  kind: 'image', maxSize: 10 * 1024 * 1024 },
+      'image/png':       { ext: '.png',  kind: 'image', maxSize: 10 * 1024 * 1024 },
+      'image/gif':       { ext: '.gif',  kind: 'image', maxSize: 10 * 1024 * 1024 },
+      'image/webp':      { ext: '.webp', kind: 'image', maxSize: 10 * 1024 * 1024 },
+      'application/pdf': { ext: '.pdf',  kind: 'document', maxSize: 20 * 1024 * 1024 },
+      'audio/mpeg':      { ext: '.mp3',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
+      'audio/mp4':       { ext: '.m4a',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
+      'audio/x-m4a':     { ext: '.m4a',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
+      'audio/wav':       { ext: '.wav',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
+      'audio/ogg':       { ext: '.ogg',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
+      'video/mp4':       { ext: '.mp4',  kind: 'video', maxSize: 100 * 1024 * 1024 },
+      'video/webm':      { ext: '.webm', kind: 'video', maxSize: 100 * 1024 * 1024 },
+      'video/quicktime': { ext: '.mov',  kind: 'video', maxSize: 100 * 1024 * 1024 },
+    },
+    maxSize: 100 * 1024 * 1024, // plafond absolu (le plus grand des maxSize ci-dessus)
   },
 
   pagination: {

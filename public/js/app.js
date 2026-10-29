@@ -682,11 +682,13 @@ const Forms = {
       if (input.type === 'checkbox') input.checked = !!val;
       else input.value = val !== null && val !== undefined ? val : '';
     });
+    FileUpload.syncAll(formEl);
   },
 
   clear(formEl) {
     formEl.reset();
     formEl.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+    FileUpload.resetAll(formEl);
   },
 
   setError(formEl, fieldName, message) {
@@ -706,6 +708,224 @@ const Forms = {
       el.style.borderColor = '';
     });
     formEl.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+  },
+};
+
+// ── 11b. Import de fichiers ───────────────────────────────
+// Remplace les champs « URL » : <div class="file-upload" data-name="image" data-accept="image"></div>
+// Le fichier choisi (téléphone ou PC) est envoyé à /api/uploads ; son adresse est
+// placée dans un champ caché nommé data-name, lu normalement par Forms.getData.
+//   data-accept   : image | document | media  (types proposés)
+//   data-max-dim  : taille max. en pixels des photos après réduction (défaut 1920)
+//   data-required : champ obligatoire (affiche *)
+const FileUpload = {
+  accepts: {
+    image: { attr: 'image/*', button: '📷 Choisir une photo', hint: 'JPG, PNG, GIF ou WEBP — 10 Mo max.' },
+    document: { attr: 'application/pdf,image/*', button: '📎 Choisir un fichier', hint: 'PDF ou image — 20 Mo max.' },
+    media: { attr: 'image/*,application/pdf,audio/*,video/*', button: '📎 Choisir un fichier', hint: 'PDF, image, audio (50 Mo) ou vidéo (100 Mo).' },
+  },
+  pending: 0,
+
+  init(root = document) {
+    root.querySelectorAll('.file-upload:not([data-ready])').forEach(el => this.build(el));
+  },
+
+  build(el) {
+    el.dataset.ready = '1';
+    const accept = this.accepts[el.dataset.accept] ? el.dataset.accept : 'media';
+    const conf = this.accepts[accept];
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = el.dataset.name;
+
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.accept = conf.attr;
+    file.className = 'file-upload-input';
+
+    const zone = document.createElement('button');
+    zone.type = 'button';
+    zone.className = 'file-upload-zone';
+    zone.innerHTML = `<span class="file-upload-btn"></span><span class="file-upload-hint"></span>`;
+    zone.querySelector('.file-upload-btn').textContent = conf.button;
+    zone.querySelector('.file-upload-hint').textContent = conf.hint;
+    zone.addEventListener('click', () => file.click());
+
+    const preview = document.createElement('div');
+    preview.className = 'file-upload-preview';
+
+    const progress = document.createElement('div');
+    progress.className = 'file-upload-progress';
+    progress.innerHTML = '<div class="file-upload-track"><div class="file-upload-bar"></div></div><span class="file-upload-status"></span>';
+
+    el.append(hidden, file, zone, progress, preview);
+
+    file.addEventListener('change', () => {
+      if (file.files && file.files[0]) this.upload(el, file.files[0], accept);
+      file.value = ''; // permettre de choisir à nouveau le même fichier
+    });
+
+    // Glisser-déposer sur ordinateur
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) this.upload(el, e.dataTransfer.files[0], accept);
+    });
+
+    this.render(el);
+  },
+
+  hiddenOf(el) { return el.querySelector('input[type="hidden"]'); },
+
+  syncAll(root) { root.querySelectorAll('.file-upload[data-ready]').forEach(el => this.render(el)); },
+
+  resetAll(root) {
+    root.querySelectorAll('.file-upload[data-ready]').forEach(el => {
+      this.hiddenOf(el).value = '';
+      this.render(el);
+    });
+  },
+
+  kindOf(url) {
+    const ext = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+    if (['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return 'audio';
+    if (['mp4', 'webm', 'mov'].includes(ext)) return 'video';
+    if (ext === 'pdf') return 'document';
+    return 'link';
+  },
+
+  // Affiche l'aperçu du fichier actuel (ou rien)
+  render(el, fileName) {
+    const url = this.hiddenOf(el).value;
+    const preview = el.querySelector('.file-upload-preview');
+    const zone = el.querySelector('.file-upload-zone');
+    preview.replaceChildren();
+    zone.style.display = url ? 'none' : '';
+    if (!url) return;
+
+    const kind = this.kindOf(url);
+    let media;
+    if (kind === 'image') {
+      media = document.createElement('img');
+      media.src = url;
+      media.alt = 'Aperçu';
+    } else if (kind === 'audio' || kind === 'video') {
+      media = document.createElement(kind);
+      media.src = url;
+      media.controls = true;
+      media.preload = 'metadata';
+    } else {
+      media = document.createElement('a');
+      media.href = url;
+      media.target = '_blank';
+      media.rel = 'noopener';
+      media.className = 'file-upload-doc';
+      media.textContent = `📄 ${fileName || decodeURIComponent(url.split('/').pop())}`;
+    }
+    media.classList.add('file-upload-media');
+
+    const actions = document.createElement('div');
+    actions.className = 'file-upload-actions';
+    const change = document.createElement('button');
+    change.type = 'button';
+    change.className = 'btn btn-sm btn-secondary';
+    change.textContent = '🔄 Changer';
+    change.addEventListener('click', () => el.querySelector('.file-upload-input').click());
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'btn btn-sm btn-danger';
+    remove.textContent = '✕ Retirer';
+    remove.addEventListener('click', () => { this.hiddenOf(el).value = ''; this.render(el); });
+    actions.append(change, remove);
+
+    preview.append(media, actions);
+  },
+
+  // Réduit les photos lourdes (appareil photo des téléphones) avant l'envoi
+  async compressImage(file, maxDim) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file; // GIF : animation conservée
+    if (file.size < 600 * 1024) return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext('2d');
+      if (file.type !== 'image/png') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      const blob = await new Promise(r => canvas.toBlob(r, type, 0.85));
+      if (!blob || blob.size >= file.size) return file;
+      return new File([blob], file.name.replace(/\.\w+$/, type === 'image/png' ? '.png' : '.jpg'), { type });
+    } catch {
+      return file;
+    }
+  },
+
+  // Désactive le bouton d'enregistrement du formulaire pendant l'envoi
+  setBusy(el, busy) {
+    const scope = el.closest('.modal') || el.closest('form') || document;
+    scope.querySelectorAll('.modal-footer .btn-primary, button[type="submit"]').forEach(btn => {
+      if (busy) { btn.dataset.uploadDisabled = btn.disabled ? '0' : '1'; btn.disabled = true; }
+      else if (btn.dataset.uploadDisabled === '1') { btn.disabled = false; delete btn.dataset.uploadDisabled; }
+    });
+  },
+
+  async upload(el, original, accept) {
+    const progress = el.querySelector('.file-upload-progress');
+    const bar = el.querySelector('.file-upload-bar');
+    const status = el.querySelector('.file-upload-status');
+    const zone = el.querySelector('.file-upload-zone');
+
+    zone.style.display = 'none';
+    progress.classList.add('active');
+    bar.style.width = '0%';
+    status.textContent = 'Préparation…';
+    this.pending++;
+    this.setBusy(el, true);
+
+    const file = await this.compressImage(original, parseInt(el.dataset.maxDim || '1920', 10));
+    const body = new FormData();
+    body.append('file', file);
+
+    const result = await new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${RAS.baseUrl}/uploads?accept=${encodeURIComponent(accept)}`);
+      xhr.withCredentials = true;
+      xhr.upload.onprogress = e => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = pct + '%';
+        status.textContent = `Envoi… ${pct}%`;
+      };
+      xhr.onload = () => {
+        let data = null;
+        try { data = JSON.parse(xhr.responseText); } catch {}
+        resolve({ ok: xhr.status >= 200 && xhr.status < 300 && data && data.success, data, status: xhr.status });
+      };
+      xhr.onerror = () => resolve({ ok: false, data: null, status: 0 });
+      xhr.send(body);
+    });
+
+    this.pending--;
+    this.setBusy(el, false);
+    progress.classList.remove('active');
+
+    if (result.ok) {
+      this.hiddenOf(el).value = result.data.url;
+      this.render(el, original.name);
+      Toast.success('Fichier importé.');
+    } else {
+      this.render(el);
+      const message = (result.data && result.data.message) ||
+        (result.status === 0 ? 'Connexion perdue pendant l\'envoi. Réessayez.' : 'Erreur lors de l\'import du fichier.');
+      Toast.error(message, 6000);
+    }
   },
 };
 
@@ -1594,7 +1814,7 @@ const Teachings = {
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-          ${t.lien || t.fichierUrl ? `<a href="${t.lien || t.fichierUrl}" target="_blank" class="btn btn-sm btn-primary" onclick="Teachings.download('${t.id}')">Accéder</a>` : ''}
+          ${t.fichierUrl || t.lien ? `<a href="${t.fichierUrl || t.lien}" target="_blank" class="btn btn-sm btn-primary" onclick="Teachings.download('${t.id}')">Accéder</a>` : ''}
           ${Auth.hasRole('admin') ? `<button class="btn btn-sm btn-danger btn-icon-only" onclick="Teachings.delete('${t.id}')">🗑</button>` : ''}
         </div>
       </div>
@@ -2127,6 +2347,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => Auth.logout());
   });
 
+  // Champs d'import de fichiers (avant le routeur, qui peut préremplir les formulaires)
+  FileUpload.init();
+
   // Initialize router
   Router.init().catch(err => {
     console.error('Router init error:', err);
@@ -2158,5 +2381,6 @@ window.Gallery = Gallery;
 window.AdminUsers = AdminUsers;
 window.Settings = Settings;
 window.SocialLinks = SocialLinks;
+window.FileUpload = FileUpload;
 window.Notifications = Notifications;
 window.Utils = Utils;
