@@ -1990,3 +1990,25 @@ audio.file-upload-media { width: 100%; }
 }
 .gallery-file span { font-size: 2.5rem; }
 .gallery-file small { color: var(--text-secondary); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* Bouton de téléchargement posé sur la photo d'un événement */
+.event-banner { position: relative; }
+.event-download {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: background var(--transition-fast);
+}
+.event-download:hover { background: var(--ras-orange); color: #fff; }

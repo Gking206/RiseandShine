@@ -452,6 +452,10 @@ const Utils = {
       offrande: ['badge-gold', '🙏', 'Offrande'],
       depense: ['badge-red', '💸', 'Dépense'],
       budget_evenement: ['badge-purple', '🎪', 'Budget Événement'],
+      // Catégories d'événement
+      public: ['badge-green', '🌍', 'Public'],
+      interne: ['badge-blue', '🏠', 'Interne'],
+      partenaire_externe: ['badge-purple', '🤝', 'Partenaire externe'],
       // Types d'enseignement
       pdf: ['badge-red', '📄', 'PDF'],
       video: ['badge-purple', '🎬', 'Vidéo'],
@@ -901,6 +905,27 @@ const FileUpload = {
     return media;
   },
 
+  isUploaded(url) {
+    return /^\/uploads\//.test(String(url || ''));
+  },
+
+  // Adresse qui force le téléchargement, sous un nom lisible (titre + extension)
+  downloadUrl(url, name) {
+    if (!this.isUploaded(url)) return url;
+    return `${url}?download=1&name=${encodeURIComponent(name || 'fichier-rise-and-shine')}`;
+  },
+
+  // Bouton « Télécharger » ; pour un lien externe (YouTube…), « Ouvrir le lien »
+  downloadButton(url, name, { label, className = 'btn btn-sm btn-secondary', onclick = '', title = '' } = {}) {
+    if (!url) return '';
+    const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+    const click = `event.stopPropagation();${onclick}`;
+    if (!this.isUploaded(url)) {
+      return `<a href="${esc(url)}" target="_blank" rel="noopener" class="${className}" onclick="${esc(click)}"${title ? ` title="${esc(title)}"` : ''}>${label || '🔗 Ouvrir le lien'}</a>`;
+    }
+    return `<a href="${esc(this.downloadUrl(url, name))}" download class="${className}" onclick="${esc(click)}"${title ? ` title="${esc(title)}"` : ''}>${label || '⬇ Télécharger'}</a>`;
+  },
+
   // Même chose en HTML, pour les listes (témoignages, galerie…)
   mediaHtml(url, { alt = '', style = '' } = {}) {
     const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
@@ -910,7 +935,7 @@ const FileUpload = {
       case 'image': return `<img src="${u}" alt="${a}" style="${esc(style)}" loading="lazy">`;
       case 'audio': return `<audio src="${u}" controls preload="metadata" style="width:100%;margin-bottom:12px;"></audio>`;
       case 'video': return `<video src="${u}" controls playsinline preload="metadata" style="width:100%;max-height:360px;border-radius:10px;background:#000;"></video>`;
-      default: return `<a href="${u}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">⬇ Télécharger le fichier</a>`;
+      default: return this.downloadButton(url, alt, { label: '⬇ Télécharger le fichier' });
     }
   },
 
@@ -1533,6 +1558,7 @@ const Finance = {
         <td>${Utils.statusBadge(f.statut)}</td>
         <td>
           <div style="display:flex;gap:6px;">
+            ${f.recu ? FileUpload.downloadButton(f.recu, `Reçu - ${f.description || f.type}`, { label: '🧾', className: 'btn btn-sm btn-secondary btn-icon-only', title: 'Télécharger le reçu' }) : ''}
             ${f.statut === 'en_attente' && Auth.hasRole('super_admin') ? `
               <button class="btn btn-sm btn-success btn-icon-only" title="Approuver" onclick="Finance.approve('${f.id}', 'approuve')">✓</button>
               <button class="btn btn-sm btn-danger btn-icon-only" title="Rejeter" onclick="Finance.approve('${f.id}', 'rejete')">✗</button>
@@ -1644,6 +1670,7 @@ const Events = {
         <div class="event-banner" style="${e.bannerUrl ? `background-image:url(${e.bannerUrl});background-size:cover;` : 'background: linear-gradient(135deg, #1a1a2e, #16213e);'}">
           <div class="event-category-badge">${Utils.statusBadge(e.categorie)}</div>
           ${!e.bannerUrl ? '<span style="font-size:3rem;opacity:0.3;">📅</span>' : ''}
+          ${FileUpload.isUploaded(e.bannerUrl) ? FileUpload.downloadButton(e.bannerUrl, `${e.titre} - photo`, { label: '⬇', className: 'event-download', title: 'Télécharger la photo' }) : ''}
         </div>
         <div class="event-body">
           <div class="event-date">📅 ${Utils.formatDate(e.dateDebut)}</div>
@@ -1674,7 +1701,8 @@ const Events = {
     const detail = document.getElementById('eventDetailContent');
     if (detail) {
       detail.innerHTML = `
-        ${e.bannerUrl ? `<img src="${e.bannerUrl}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:16px;">` : ''}
+        ${e.bannerUrl ? `<img src="${e.bannerUrl}" style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-bottom:10px;">` : ''}
+        ${FileUpload.isUploaded(e.bannerUrl) ? `<div style="margin-bottom:16px;">${FileUpload.downloadButton(e.bannerUrl, `${e.titre} - photo`, { label: '⬇ Télécharger la photo' })}</div>` : ''}
         <h2 style="margin-bottom:8px;">${e.titre}</h2>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
           ${Utils.statusBadge(e.categorie)} ${Utils.statusBadge(e.statut)}
@@ -1822,7 +1850,8 @@ const Testimonies = {
             <span class="text-muted text-sm">${Utils.formatDate(t.createdAt)}</span>
           </div>
         </div>
-        ${t.image ? FileUpload.mediaHtml(t.image, { style: 'width:100%;border-radius:12px;margin-bottom:16px;' }) : ''}
+        ${t.image ? FileUpload.mediaHtml(t.image, { style: 'width:100%;border-radius:12px;margin-bottom:10px;' }) : ''}
+        ${FileUpload.isUploaded(t.image) && FileUpload.displayKind(t.image) !== 'download' ? `<div style="margin-bottom:16px;">${FileUpload.downloadButton(t.image, t.titre)}</div>` : ''}
         <h3 style="margin-bottom:12px;">${t.titre}</h3>
         <p style="line-height:1.8;color:var(--text-secondary);">${t.contenu}</p>
         <div class="divider"></div>
@@ -1938,7 +1967,8 @@ const Teachings = {
             ? `<div style="margin-top:10px;">${FileUpload.mediaHtml(t.fichierUrl)}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-          ${t.fichierUrl || t.lien ? `<a href="${t.fichierUrl || t.lien}" target="_blank" class="btn btn-sm btn-primary" onclick="Teachings.download('${t.id}')">Accéder</a>` : ''}
+          ${t.fichierUrl || t.lien ? `<a href="${t.fichierUrl || t.lien}" target="_blank" class="btn btn-sm btn-primary">Accéder</a>` : ''}
+          ${FileUpload.isUploaded(t.fichierUrl) ? FileUpload.downloadButton(t.fichierUrl, t.titre, { onclick: `Teachings.download('${t.id}')` }) : ''}
           ${Auth.hasRole('admin') ? `<button class="btn btn-sm btn-danger btn-icon-only" onclick="Teachings.delete('${t.id}')">🗑</button>` : ''}
         </div>
       </div>
@@ -2186,7 +2216,9 @@ const Gallery = {
     if (!item || !detail) return;
     const title = String(item.titre ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
     detail.innerHTML = FileUpload.mediaHtml(item.imageUrl, { alt: item.titre, style: 'width:100%;max-height:70vh;object-fit:contain;border-radius:12px;' }) +
-      `<p style="text-align:center;margin-top:12px;color:var(--text-muted);">${title}</p>`;
+      `<p style="text-align:center;margin-top:12px;color:var(--text-muted);">${title}</p>` +
+      (FileUpload.isUploaded(item.imageUrl) && FileUpload.displayKind(item.imageUrl) !== 'download'
+        ? `<div style="text-align:center;margin-top:12px;">${FileUpload.downloadButton(item.imageUrl, item.titre || 'galerie-rise-and-shine', { className: 'btn btn-primary' })}</div>` : '');
     Modal.open('galleryDetailModal');
   },
 

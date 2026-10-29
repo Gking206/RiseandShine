@@ -109,6 +109,25 @@ app.use(session({
 app.use(requestLogger);
 
 // Fichiers statiques
+// Téléchargement : /uploads/…/fichier.mp3?download=1&name=Titre lisible
+// force l'enregistrement du fichier (même dans les navigateurs intégrés à
+// WhatsApp/Facebook, qui ignorent l'attribut HTML « download ») sous un nom lisible.
+app.use('/uploads', (req, res, next) => {
+  if (req.query.download !== undefined) {
+    const ext = path.extname(req.path).toLowerCase();
+    let name = String(req.query.name || '')
+      .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 100) || 'fichier-rise-and-shine';
+    if (ext && !name.toLowerCase().endsWith(ext)) name += ext;
+    // Nom en UTF-8 (accents) + version sans accents pour les anciens navigateurs
+    const ascii = name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7e]/g, '_');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name).replace(/['()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase())}`);
+  }
+  next();
+});
 // Fichiers importés : noms aléatoires jamais réécrits, donc cache long possible
 app.use('/uploads', express.static(config.paths.uploads, { etag: true, maxAge: '7d', index: false }));
 app.use('/uploads', (req, res) => res.status(404).end()); // pas de page d'accueil à la place d'un fichier manquant
