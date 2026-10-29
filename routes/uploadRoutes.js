@@ -3,9 +3,11 @@
 // Import de fichiers (images, audio, vidéo, documents) depuis le téléphone ou l'ordinateur.
 //
 // Le fichier est envoyé par morceaux (config.upload.chunkSize) :
-//   POST /api/uploads/chunk?accept=…&uploadId=…&index=…&total=…&size=…&name=…   (champ « chunk »)
+//   POST /api/uploads/chunk?accept=…&uploadId=…&index=…&total=…&size=…&name=…&chunkSize=…   (champ « chunk »)
 // Chaque requête reste petite : elle passe les limites de taille et de durée du
 // proxy de l'hébergeur, et un morceau perdu (coupure réseau) est simplement renvoyé.
+// La taille des morceaux est choisie par le navigateur (entre MIN et MAX) : si le
+// proxy refuse 4 Mo (413), le navigateur recommence avec des morceaux plus petits.
 // Le fichier terminé est enregistré dans <uploads>/AAAA-MM/<nom aléatoire>.<ext>
 // et servi à l'adresse /uploads/AAAA-MM/<nom>.
 
@@ -20,7 +22,9 @@ const { generateId } = require('../utils/idGenerator');
 const { requireAuth } = require('../middleware/authMiddleware');
 
 const router = express.Router();
-const { kinds: KINDS, chunkSize: CHUNK_SIZE } = config.upload;
+const { kinds: KINDS, chunkSize: DEFAULT_CHUNK } = config.upload;
+const MIN_CHUNK = 128 * 1024;
+const MAX_CHUNK = 8 * 1024 * 1024;
 const TMP_DIR = path.join(config.paths.uploads, '.tmp'); // dossier « . » : jamais servi
 const STALE_MS = 24 * 60 * 60 * 1000;
 
@@ -45,6 +49,7 @@ function formatMb(bytes) {
 }
 
 function fail(res, status, message) {
+  if (status >= 400) logger.warn('Import refusé', { status, message, url: res.req && res.req.originalUrl });
   return res.status(status).json({ success: false, message });
 }
 
@@ -59,10 +64,10 @@ async function removeStaleUploads() {
   } catch {}
 }
 
-// Un morceau = au plus chunkSize octets (petite marge pour l'enveloppe multipart)
+// Un morceau = au plus MAX_CHUNK octets ; la taille annoncée est vérifiée ensuite
 const chunkUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: CHUNK_SIZE + 64 * 1024, files: 1, fields: 5 },
+  limits: { fileSize: MAX_CHUNK, files: 1, fields: 5 },
 });
 
 // Limite le nombre de FICHIERS (pas de morceaux) importés par heure
@@ -89,11 +94,14 @@ router.post('/chunk', requireAuth, uploadLimiter, (req, res) => {
       const size = parseInt(req.query.size, 10);
       const name = String(req.query.name || '').slice(0, 200);
       const accept = ACCEPT[req.query.accept] ? req.query.accept : 'media';
+      const chunkSize = req.query.chunkSize ? parseInt(req.query.chunkSize, 10) : DEFAULT_CHUNK;
 
       if (!/^[A-Za-z0-9-]{8,64}$/.test(uploadId || '') || !(index >= 0) || !(total >= 1) || index >= total || !(size >= 1)) {
         return fail(res, 400, "Paramètres d'import invalides.");
       }
+      if (!(chunkSize >= MIN_CHUNK && chunkSize <= MAX_CHUNK)) return fail(res, 400, "Paramètres d'import invalides.");
       if (!req.file || !req.file.buffer.length) return fail(res, 400, 'Aucun fichier reçu.');
+      if (req.file.buffer.length > chunkSize) return fail(res, 400, 'Morceau de fichier trop grand.');
 
       const ext = (path.extname(name).slice(1) || '').toLowerCase();
       const kind = kindOfExt(ext);
@@ -104,7 +112,7 @@ router.post('/chunk', requireAuth, uploadLimiter, (req, res) => {
       if (size > KINDS[kind].maxSize) {
         return fail(res, 413, `Fichier trop volumineux : ${formatMb(size)}. Maximum ${formatMb(KINDS[kind].maxSize)} pour un fichier ${KIND_LABELS[kind]}.`);
       }
-      if (total !== Math.ceil(size / CHUNK_SIZE)) return fail(res, 400, "Paramètres d'import invalides.");
+      if (total !== Math.ceil(size / chunkSize)) return fail(res, 400, "Paramètres d'import invalides.");
 
       // ── Assemblage ────────────────────────────────────────
       await fs.mkdir(TMP_DIR, { recursive: true });
@@ -115,11 +123,11 @@ router.post('/chunk', requireAuth, uploadLimiter, (req, res) => {
       let meta;
       if (index === 0) {
         removeStaleUploads();
-        meta = { received: 0, total, size, ext, kind, name };
+        meta = { received: 0, total, size, ext, kind, name, chunkSize };
         await fs.writeFile(partPath, Buffer.alloc(0));
       } else {
         meta = JSON.parse(await fs.readFile(metaPath, 'utf8').catch(() => 'null'));
-        if (!meta || meta.total !== total || meta.size !== size || meta.ext !== ext) {
+        if (!meta || meta.total !== total || meta.size !== size || meta.ext !== ext || meta.chunkSize !== chunkSize) {
           return fail(res, 409, "L'import a été interrompu. Choisissez à nouveau le fichier.");
         }
       }
@@ -173,7 +181,7 @@ router.post('/chunk', requireAuth, uploadLimiter, (req, res) => {
 router.get('/config', requireAuth, (req, res) => {
   const kinds = {};
   for (const [k, v] of Object.entries(KINDS)) kinds[k] = { maxSize: v.maxSize, exts: v.exts };
-  res.json({ success: true, chunkSize: CHUNK_SIZE, kinds, accept: ACCEPT });
+  res.json({ success: true, chunkSize: DEFAULT_CHUNK, minChunkSize: MIN_CHUNK, maxChunkSize: MAX_CHUNK, kinds, accept: ACCEPT });
 });
 
 module.exports = router;

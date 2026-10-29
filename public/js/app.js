@@ -739,7 +739,6 @@ const FileUpload = {
     document: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'txt'],
   },
   maxSizes: { image: 15 * 1024 * 1024, audio: 300 * 1024 * 1024, video: 1024 * 1024 * 1024, document: 50 * 1024 * 1024 },
-  chunkSize: 4 * 1024 * 1024,
   accepts: {
     image: { kinds: ['image'], mime: 'image/*', button: '📷 Choisir une photo', hint: 'JPG, PNG, GIF ou WEBP — 15 Mo max.' },
     document: { kinds: ['document', 'image'], mime: 'image/*', button: '📎 Choisir un fichier', hint: 'PDF, Word, PowerPoint, Excel ou photo — 50 Mo max.' },
@@ -1007,6 +1006,59 @@ const FileUpload = {
     return null;
   },
 
+  // Tailles de morceaux essayées, de la plus rapide à la plus sûre.
+  // 768 Ko reste sous la limite de 1 Mo par requête de nombreux proxys (Nginx par défaut).
+  chunkSizes: [4 * 1024 * 1024, 768 * 1024, 256 * 1024],
+
+  workingChunkSize() {
+    try { return parseInt(localStorage.getItem('ras.chunkSize'), 10) || this.chunkSizes[0]; } catch { return this.chunkSizes[0]; }
+  },
+
+  rememberChunkSize(size) {
+    try { localStorage.setItem('ras.chunkSize', String(size)); } catch {}
+  },
+
+  // Envoie le fichier entier par morceaux de chunkSize.
+  // Retourne { ok, data, status, tooLarge } ; tooLarge = le proxy a refusé la taille des morceaux.
+  async sendFile(file, accept, chunkSize, bar, status) {
+    const total = Math.max(1, Math.ceil(file.size / chunkSize));
+    const uploadId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const base = { accept, uploadId, total, size: file.size, name: file.name, chunkSize };
+    let result = null;
+    let index = 0;
+
+    while (index < total) {
+      const start = index * chunkSize;
+      const blob = file.slice(start, Math.min(start + chunkSize, file.size));
+      let attempt = 0;
+      for (;;) {
+        result = await this.sendChunk({ ...base, index }, blob, sent => {
+          const pct = Math.floor(((start + sent) / file.size) * 100);
+          bar.style.width = pct + '%';
+          status.textContent = `Envoi… ${pct}%${total > 1 ? ` (${this.formatSize(start + sent)} / ${this.formatSize(file.size)})` : ''}`;
+        });
+        if (result.ok) break;
+        // Requête refusée par le proxy de l'hébergeur (page HTML 413, pas notre JSON)
+        if (result.status === 413 && !result.data) return { ...result, tooLarge: true };
+        // Premier morceau coupé net : souvent un proxy qui refuse la taille
+        if (result.status === 0 && index === 0 && attempt === 0 && chunkSize > this.chunkSizes[this.chunkSizes.length - 1]) {
+          return { ...result, tooLarge: true };
+        }
+        // Morceau manquant côté serveur : reprendre à l'endroit indiqué
+        if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) break;
+        // Coupure réseau ou erreur serveur passagère : nouvel essai
+        const retryable = result.status === 0 || result.status >= 500 || result.status === 429;
+        if (!retryable || ++attempt > 4) break;
+        status.textContent = `Connexion instable, nouvel essai (${attempt}/4)…`;
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+      if (result.ok) { index++; continue; }
+      if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) { index = result.data.expected; continue; }
+      break;
+    }
+    return result;
+  },
+
   async upload(el, original, accept) {
     const progress = el.querySelector('.file-upload-progress');
     const bar = el.querySelector('.file-upload-bar');
@@ -1027,33 +1079,20 @@ const FileUpload = {
       ? await this.compressImage(original, parseInt(el.dataset.maxDim || '1920', 10))
       : original;
 
-    const total = Math.max(1, Math.ceil(file.size / this.chunkSize));
-    const uploadId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    const base = { accept, uploadId, total, size: file.size, name: file.name };
+    // Taille des morceaux : on commence par la dernière taille qui a fonctionné.
+    // Si l'hébergeur refuse la requête (413 de son proxy), on recommence avec
+    // des morceaux plus petits.
+    let sizeIndex = Math.max(0, this.chunkSizes.indexOf(this.workingChunkSize()));
     let result = null;
-    let index = 0;
-
-    while (index < total) {
-      const start = index * this.chunkSize;
-      const blob = file.slice(start, Math.min(start + this.chunkSize, file.size));
-      let attempt = 0;
-      for (;;) {
-        result = await this.sendChunk({ ...base, index }, blob, sent => {
-          const pct = Math.floor(((start + sent) / file.size) * 100);
-          bar.style.width = pct + '%';
-          status.textContent = `Envoi… ${pct}%${total > 1 ? ` (${this.formatSize(start + sent)} / ${this.formatSize(file.size)})` : ''}`;
-        });
-        if (result.ok) break;
-        // Morceau manquant côté serveur : reprendre à l'endroit indiqué
-        if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) break;
-        // Coupure réseau ou erreur serveur passagère : nouvel essai
-        const retryable = result.status === 0 || result.status >= 500 || result.status === 429;
-        if (!retryable || ++attempt > 4) break;
-        status.textContent = `Connexion instable, nouvel essai (${attempt}/4)…`;
-        await new Promise(r => setTimeout(r, 1500 * attempt));
+    for (;;) {
+      const chunkSize = this.chunkSizes[sizeIndex];
+      result = await this.sendFile(file, accept, chunkSize, bar, status);
+      if (result.tooLarge && sizeIndex < this.chunkSizes.length - 1) {
+        sizeIndex++;
+        status.textContent = 'Ajustement à la connexion du serveur…';
+        continue;
       }
-      if (result.ok) { index++; continue; }
-      if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) { index = result.data.expected; continue; }
+      if (result.ok) this.rememberChunkSize(chunkSize);
       break;
     }
 
@@ -1067,10 +1106,11 @@ const FileUpload = {
       Toast.success('Fichier importé.');
     } else {
       this.render(el);
+      const code = result ? result.status : 0;
       const message = (result && result.data && result.data.message) ||
-        (result && result.status === 413 ? 'Fichier trop volumineux pour le serveur.' :
-          result && result.status === 0 ? 'Connexion perdue pendant l\'envoi. Vérifiez votre connexion et réessayez.' :
-            'Erreur lors de l\'import du fichier.');
+        (code === 413 ? 'Le serveur de l\'hébergeur refuse ce fichier (code 413).' :
+          code === 0 ? 'Connexion perdue pendant l\'envoi. Vérifiez votre connexion et réessayez.' :
+            `Erreur lors de l'import du fichier (code ${code}).`);
       Toast.error(message, 8000);
     }
   },
