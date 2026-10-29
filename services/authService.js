@@ -89,8 +89,24 @@ async function validateSession(req) {
   return user;
 }
 
+// Crée les comptes Super Admin de départ UNIQUEMENT lors de la première
+// installation (aucun Super Admin en base). Auparavant ils étaient recréés à
+// chaque démarrage dès qu'ils manquaient : un compte supprimé réapparaissait.
 async function initializeSuperAdmins() {
-  for (const adminData of config.superAdmins) {
+  const existing = await db.count(config.collections.USERS, { role: 'super_admin' });
+  if (existing > 0) return;
+
+  // Compte de départ personnalisable (recommandé en production)
+  const initial = process.env.SUPERADMIN_EMAIL && process.env.SUPERADMIN_PASSWORD
+    ? [{
+        nom: process.env.SUPERADMIN_NOM || 'Super Admin',
+        email: process.env.SUPERADMIN_EMAIL.toLowerCase().trim(),
+        password: process.env.SUPERADMIN_PASSWORD,
+        role: 'super_admin',
+      }]
+    : config.superAdmins;
+
+  for (const adminData of initial) {
     const exists = await db.exists(config.collections.USERS, { email: adminData.email });
     if (!exists) {
       const hashedPassword = await hashPassword(adminData.password);

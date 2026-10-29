@@ -151,37 +151,5 @@
     "permissions": [],
     "createdAt": "2026-05-29T14:46:35.104Z",
     "updatedAt": "2026-05-29T14:47:06.708Z"
-  },
-  {
-    "id": "3ca4e9dd-a9ef-42e6-96a1-e10d39178c34",
-    "nom": "Directeur Général",
-    "email": "superadmin@riseandshine.org",
-    "password": "$2a$12$91IuE/6ZuW.JGISTPQ535.YNWyp.jb/0BvxSjv3UGj43deTfF0.bu",
-    "role": "super_admin",
-    "actif": true,
-    "telephone": "",
-    "sexe": "",
-    "age": null,
-    "ville": "",
-    "avatar": null,
-    "permissions": [],
-    "createdAt": "2026-05-29T14:55:13.954Z",
-    "updatedAt": "2026-05-29T14:55:13.954Z"
-  },
-  {
-    "id": "df79bcbc-55c0-4323-baee-d6d36ded2eca",
-    "nom": "Admin Principal",
-    "email": "admin.general@riseandshine.org",
-    "password": "$2a$12$qWliAGKRN8mOE86rFU71F.uECeInIS3SafDLpmhjZ2CPFj6Il3N.y",
-    "role": "super_admin",
-    "actif": true,
-    "telephone": "",
-    "sexe": "",
-    "age": null,
-    "ville": "",
-    "avatar": null,
-    "permissions": [],
-    "createdAt": "2026-05-29T14:55:14.277Z",
-    "updatedAt": "2026-05-29T14:55:14.277Z"
   }
 ]
