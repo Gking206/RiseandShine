@@ -76,8 +76,23 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// CORS
-app.use(cors({ origin: true, credentials: true }));
+// CORS — désactivé par défaut : le site et l'API sont servis par le même domaine,
+// les requêtes du site n'en ont donc pas besoin. Auparavant `origin: true` +
+// `credentials: true` autorisait N'IMPORTE QUEL site à lire les réponses de
+// l'API avec le cookie de session du visiteur.
+// Pour autoriser un autre domaine (ex. une application séparée) :
+// CORS_ORIGINS=https://app.exemple.com,https://autre.exemple.com
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+if (corsOrigins.length) {
+  app.use(cors({
+    // Origine inconnue : pas d'en-tête CORS, le navigateur bloque la lecture
+    origin: (origin, cb) => cb(null, !!origin && corsOrigins.includes(origin)),
+    credentials: true,
+  }));
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
