@@ -136,25 +136,20 @@ const config = {
   socialNetworks: ['facebook', 'instagram', 'youtube', 'tiktok', 'whatsapp'],
 
   // Fichiers importés depuis le téléphone ou l'ordinateur.
-  // Type MIME autorisé -> extension enregistrée sur le disque, et taille maximale.
-  // (Pas de SVG ni de HTML : ils pourraient contenir du code exécuté par le navigateur.)
+  // Le type est déterminé par l'EXTENSION du fichier : le type MIME annoncé par
+  // le navigateur varie selon l'appareil (ex. « .amr » sans type sous Windows,
+  // « audio/mp3 » ou « audio/mpeg » selon les téléphones).
+  // Pas de SVG, HTML, JS… : ils pourraient contenir du code exécuté par le navigateur.
   upload: {
-    types: {
-      'image/jpeg':      { ext: '.jpg',  kind: 'image', maxSize: 10 * 1024 * 1024 },
-      'image/png':       { ext: '.png',  kind: 'image', maxSize: 10 * 1024 * 1024 },
-      'image/gif':       { ext: '.gif',  kind: 'image', maxSize: 10 * 1024 * 1024 },
-      'image/webp':      { ext: '.webp', kind: 'image', maxSize: 10 * 1024 * 1024 },
-      'application/pdf': { ext: '.pdf',  kind: 'document', maxSize: 20 * 1024 * 1024 },
-      'audio/mpeg':      { ext: '.mp3',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
-      'audio/mp4':       { ext: '.m4a',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
-      'audio/x-m4a':     { ext: '.m4a',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
-      'audio/wav':       { ext: '.wav',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
-      'audio/ogg':       { ext: '.ogg',  kind: 'audio', maxSize: 50 * 1024 * 1024 },
-      'video/mp4':       { ext: '.mp4',  kind: 'video', maxSize: 100 * 1024 * 1024 },
-      'video/webm':      { ext: '.webm', kind: 'video', maxSize: 100 * 1024 * 1024 },
-      'video/quicktime': { ext: '.mov',  kind: 'video', maxSize: 100 * 1024 * 1024 },
+    kinds: {
+      image:    { maxSize: 15 * 1024 * 1024,  exts: ['jpg', 'jpeg', 'png', 'gif', 'webp'] },
+      audio:    { maxSize: 300 * 1024 * 1024, exts: ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'amr', 'flac', 'wma', '3ga'] },
+      video:    { maxSize: 1024 * 1024 * 1024, exts: ['mp4', 'm4v', 'mov', 'webm', '3gp', 'mkv', 'avi'] },
+      document: { maxSize: 50 * 1024 * 1024,  exts: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'txt'] },
     },
-    maxSize: 100 * 1024 * 1024, // plafond absolu (le plus grand des maxSize ci-dessus)
+    // Les fichiers sont envoyés par morceaux : chaque requête reste petite, ce
+    // qui passe les limites du proxy de l'hébergeur et survit aux coupures réseau.
+    chunkSize: 4 * 1024 * 1024,
   },
 
   pagination: {

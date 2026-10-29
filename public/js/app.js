@@ -452,6 +452,13 @@ const Utils = {
       offrande: ['badge-gold', '🙏', 'Offrande'],
       depense: ['badge-red', '💸', 'Dépense'],
       budget_evenement: ['badge-purple', '🎪', 'Budget Événement'],
+      // Types d'enseignement
+      pdf: ['badge-red', '📄', 'PDF'],
+      video: ['badge-purple', '🎬', 'Vidéo'],
+      audio: ['badge-blue', '🎵', 'Audio'],
+      image: ['badge-gold', '🖼', 'Image'],
+      lien: ['badge-gray', '🔗', 'Lien'],
+      texte: ['badge-gray', '📝', 'Texte'],
     };
     const [cls, icon, label] = map[status] || ['badge-gray', '?', status || '—'];
     return `<span class="badge ${cls}">${icon} ${label}</span>`;
@@ -715,16 +722,47 @@ const Forms = {
 // Remplace les champs « URL » : <div class="file-upload" data-name="image" data-accept="image"></div>
 // Le fichier choisi (téléphone ou PC) est envoyé à /api/uploads ; son adresse est
 // placée dans un champ caché nommé data-name, lu normalement par Forms.getData.
-//   data-accept   : image | document | media  (types proposés)
+//   data-accept   : image | document | av | media  (types proposés)
 //   data-max-dim  : taille max. en pixels des photos après réduction (défaut 1920)
-//   data-required : champ obligatoire (affiche *)
+// Les fichiers partent par morceaux (/api/uploads/chunk) : les gros audios et
+// vidéos passent les limites du serveur et un morceau perdu est renvoyé.
 const FileUpload = {
+  // Extensions acceptées (doivent correspondre à config.upload.kinds côté serveur)
+  exts: {
+    image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    audio: ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'amr', 'flac', 'wma', '3ga'],
+    video: ['mp4', 'm4v', 'mov', 'webm', '3gp', 'mkv', 'avi'],
+    document: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'txt'],
+  },
+  maxSizes: { image: 15 * 1024 * 1024, audio: 300 * 1024 * 1024, video: 1024 * 1024 * 1024, document: 50 * 1024 * 1024 },
+  chunkSize: 4 * 1024 * 1024,
   accepts: {
-    image: { attr: 'image/*', button: '📷 Choisir une photo', hint: 'JPG, PNG, GIF ou WEBP — 10 Mo max.' },
-    document: { attr: 'application/pdf,image/*', button: '📎 Choisir un fichier', hint: 'PDF ou image — 20 Mo max.' },
-    media: { attr: 'image/*,application/pdf,audio/*,video/*', button: '📎 Choisir un fichier', hint: 'PDF, image, audio (50 Mo) ou vidéo (100 Mo).' },
+    image: { kinds: ['image'], mime: 'image/*', button: '📷 Choisir une photo', hint: 'JPG, PNG, GIF ou WEBP — 15 Mo max.' },
+    document: { kinds: ['document', 'image'], mime: 'image/*', button: '📎 Choisir un fichier', hint: 'PDF, Word, PowerPoint, Excel ou photo — 50 Mo max.' },
+    av: { kinds: ['image', 'audio', 'video'], mime: 'image/*,audio/*,video/*', button: '📎 Photo, audio ou vidéo', hint: 'Photo (15 Mo), audio MP3, M4A, WAV… (300 Mo) ou vidéo MP4, MOV… (1 Go).' },
+    media: { kinds: ['image', 'audio', 'video', 'document'], mime: 'image/*,audio/*,video/*', button: '📎 Choisir un fichier', hint: 'Audio MP3, M4A, WAV… (300 Mo), vidéo MP4, MOV… (1 Go), PDF, Word, PowerPoint ou photo.' },
   },
   pending: 0,
+
+  // Attribut accept : types génériques + extensions (certains téléphones ne
+  // reconnaissent pas « .amr » ou « .opus » par leur type)
+  acceptAttr(accept) {
+    const conf = this.accepts[accept];
+    return [conf.mime, ...conf.kinds.flatMap(k => this.exts[k]).map(e => '.' + e)].join(',');
+  },
+
+  extOf(name) {
+    const m = /\.([A-Za-z0-9]+)$/.exec(name || '');
+    return m ? m[1].toLowerCase() : '';
+  },
+
+  kindOfExt(ext) {
+    return Object.keys(this.exts).find(k => this.exts[k].includes(ext)) || null;
+  },
+
+  formatSize(bytes) {
+    return bytes >= 1024 * 1024 * 1024 ? `${(bytes / 1024 / 1024 / 1024).toFixed(1)} Go` : `${Math.max(1, Math.round(bytes / 1024 / 1024))} Mo`;
+  },
 
   init(root = document) {
     root.querySelectorAll('.file-upload:not([data-ready])').forEach(el => this.build(el));
@@ -741,7 +779,7 @@ const FileUpload = {
 
     const file = document.createElement('input');
     file.type = 'file';
-    file.accept = conf.attr;
+    file.accept = this.acceptAttr(accept);
     file.className = 'file-upload-input';
 
     const zone = document.createElement('button');
@@ -790,12 +828,7 @@ const FileUpload = {
   },
 
   kindOf(url) {
-    const ext = (url.split('?')[0].split('.').pop() || '').toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
-    if (['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return 'audio';
-    if (['mp4', 'webm', 'mov'].includes(ext)) return 'video';
-    if (ext === 'pdf') return 'document';
-    return 'link';
+    return this.kindOfExt(this.extOf(String(url || '').split('?')[0])) || 'link';
   },
 
   // Affiche l'aperçu du fichier actuel (ou rien)
@@ -807,25 +840,7 @@ const FileUpload = {
     zone.style.display = url ? 'none' : '';
     if (!url) return;
 
-    const kind = this.kindOf(url);
-    let media;
-    if (kind === 'image') {
-      media = document.createElement('img');
-      media.src = url;
-      media.alt = 'Aperçu';
-    } else if (kind === 'audio' || kind === 'video') {
-      media = document.createElement(kind);
-      media.src = url;
-      media.controls = true;
-      media.preload = 'metadata';
-    } else {
-      media = document.createElement('a');
-      media.href = url;
-      media.target = '_blank';
-      media.rel = 'noopener';
-      media.className = 'file-upload-doc';
-      media.textContent = `📄 ${fileName || decodeURIComponent(url.split('/').pop())}`;
-    }
+    const media = this.createMedia(url, fileName);
     media.classList.add('file-upload-media');
 
     const actions = document.createElement('div');
@@ -843,6 +858,60 @@ const FileUpload = {
     actions.append(change, remove);
 
     preview.append(media, actions);
+  },
+
+  // Formats lisibles directement dans le navigateur ; les autres (AMR, WMA,
+  // MKV, AVI…) sont proposés en téléchargement.
+  playable: {
+    audio: ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac'],
+    video: ['mp4', 'm4v', 'mov', 'webm'],
+  },
+
+  displayKind(url) {
+    const ext = this.extOf(String(url || '').split('?')[0]);
+    const kind = this.kindOfExt(ext);
+    if (kind === 'image') return 'image';
+    if ((kind === 'audio' || kind === 'video') && this.playable[kind].includes(ext)) return kind;
+    return kind ? 'download' : 'link';
+  },
+
+  // Élément d'affichage d'un fichier (aperçu du formulaire)
+  createMedia(url, fileName) {
+    const kind = this.displayKind(url);
+    let media;
+    if (kind === 'image') {
+      media = document.createElement('img');
+      media.src = url;
+      media.alt = 'Aperçu';
+    } else if (kind === 'audio' || kind === 'video') {
+      media = document.createElement(kind);
+      media.src = url;
+      media.controls = true;
+      media.preload = 'metadata';
+      if (kind === 'video') media.playsInline = true;
+    } else {
+      media = document.createElement('a');
+      media.href = url;
+      media.target = '_blank';
+      media.rel = 'noopener';
+      media.className = 'file-upload-doc';
+      const icon = { audio: '🎵', video: '🎬' }[this.kindOfExt(this.extOf(url))] || '📄';
+      media.textContent = `${icon} ${fileName || decodeURIComponent(url.split('/').pop())}`;
+    }
+    return media;
+  },
+
+  // Même chose en HTML, pour les listes (témoignages, galerie…)
+  mediaHtml(url, { alt = '', style = '' } = {}) {
+    const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+    const u = esc(url);
+    const a = esc(alt);
+    switch (this.displayKind(url)) {
+      case 'image': return `<img src="${u}" alt="${a}" style="${esc(style)}" loading="lazy">`;
+      case 'audio': return `<audio src="${u}" controls preload="metadata" style="width:100%;margin-bottom:12px;"></audio>`;
+      case 'video': return `<video src="${u}" controls playsinline preload="metadata" style="width:100%;max-height:360px;border-radius:10px;background:#000;"></video>`;
+      default: return `<a href="${u}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">⬇ Télécharger le fichier</a>`;
+    }
   },
 
   // Réduit les photos lourdes (appareil photo des téléphones) avant l'envoi
@@ -876,11 +945,51 @@ const FileUpload = {
     });
   },
 
+  // Envoie un morceau ; onProgress reçoit les octets envoyés de ce morceau
+  sendChunk(params, blob, onProgress) {
+    return new Promise(resolve => {
+      const body = new FormData();
+      body.append('chunk', blob, 'chunk');
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${RAS.baseUrl}/uploads/chunk?${new URLSearchParams(params)}`);
+      xhr.withCredentials = true;
+      xhr.timeout = 120000;
+      xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(Math.min(e.loaded, blob.size)); };
+      xhr.onload = () => {
+        let data = null;
+        try { data = JSON.parse(xhr.responseText); } catch {}
+        resolve({ ok: xhr.status >= 200 && xhr.status < 300 && data && data.success, data, status: xhr.status });
+      };
+      xhr.onerror = () => resolve({ ok: false, data: null, status: 0 });
+      xhr.ontimeout = () => resolve({ ok: false, data: null, status: 0 });
+      xhr.send(body);
+    });
+  },
+
+  // Vérifications faites avant l'envoi, pour un message immédiat
+  checkFile(file, accept) {
+    const ext = this.extOf(file.name);
+    const kind = this.kindOfExt(ext);
+    const allowed = this.accepts[accept].kinds;
+    if (!kind || !allowed.includes(kind)) {
+      const list = allowed.flatMap(k => this.exts[k]).map(e => e.toUpperCase()).join(', ');
+      return `Format « .${ext || '?'} » non accepté ici. Formats possibles : ${list}.`;
+    }
+    if (file.size > this.maxSizes[kind]) {
+      return `Fichier trop volumineux (${this.formatSize(file.size)}). Maximum ${this.formatSize(this.maxSizes[kind])} pour ce type de fichier.`;
+    }
+    if (!file.size) return 'Ce fichier est vide.';
+    return null;
+  },
+
   async upload(el, original, accept) {
     const progress = el.querySelector('.file-upload-progress');
     const bar = el.querySelector('.file-upload-bar');
     const status = el.querySelector('.file-upload-status');
     const zone = el.querySelector('.file-upload-zone');
+
+    const problem = this.checkFile(original, accept);
+    if (problem) { Toast.error(problem, 8000); return; }
 
     zone.style.display = 'none';
     progress.classList.add('active');
@@ -889,42 +998,55 @@ const FileUpload = {
     this.pending++;
     this.setBusy(el, true);
 
-    const file = await this.compressImage(original, parseInt(el.dataset.maxDim || '1920', 10));
-    const body = new FormData();
-    body.append('file', file);
+    const file = this.kindOfExt(this.extOf(original.name)) === 'image'
+      ? await this.compressImage(original, parseInt(el.dataset.maxDim || '1920', 10))
+      : original;
 
-    const result = await new Promise(resolve => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${RAS.baseUrl}/uploads?accept=${encodeURIComponent(accept)}`);
-      xhr.withCredentials = true;
-      xhr.upload.onprogress = e => {
-        if (!e.lengthComputable) return;
-        const pct = Math.round((e.loaded / e.total) * 100);
-        bar.style.width = pct + '%';
-        status.textContent = `Envoi… ${pct}%`;
-      };
-      xhr.onload = () => {
-        let data = null;
-        try { data = JSON.parse(xhr.responseText); } catch {}
-        resolve({ ok: xhr.status >= 200 && xhr.status < 300 && data && data.success, data, status: xhr.status });
-      };
-      xhr.onerror = () => resolve({ ok: false, data: null, status: 0 });
-      xhr.send(body);
-    });
+    const total = Math.max(1, Math.ceil(file.size / this.chunkSize));
+    const uploadId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const base = { accept, uploadId, total, size: file.size, name: file.name };
+    let result = null;
+    let index = 0;
+
+    while (index < total) {
+      const start = index * this.chunkSize;
+      const blob = file.slice(start, Math.min(start + this.chunkSize, file.size));
+      let attempt = 0;
+      for (;;) {
+        result = await this.sendChunk({ ...base, index }, blob, sent => {
+          const pct = Math.floor(((start + sent) / file.size) * 100);
+          bar.style.width = pct + '%';
+          status.textContent = `Envoi… ${pct}%${total > 1 ? ` (${this.formatSize(start + sent)} / ${this.formatSize(file.size)})` : ''}`;
+        });
+        if (result.ok) break;
+        // Morceau manquant côté serveur : reprendre à l'endroit indiqué
+        if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) break;
+        // Coupure réseau ou erreur serveur passagère : nouvel essai
+        const retryable = result.status === 0 || result.status >= 500 || result.status === 429;
+        if (!retryable || ++attempt > 4) break;
+        status.textContent = `Connexion instable, nouvel essai (${attempt}/4)…`;
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+      if (result.ok) { index++; continue; }
+      if (result.status === 409 && result.data && Number.isInteger(result.data.expected)) { index = result.data.expected; continue; }
+      break;
+    }
 
     this.pending--;
     this.setBusy(el, false);
     progress.classList.remove('active');
 
-    if (result.ok) {
+    if (result && result.ok && result.data.url) {
       this.hiddenOf(el).value = result.data.url;
       this.render(el, original.name);
       Toast.success('Fichier importé.');
     } else {
       this.render(el);
-      const message = (result.data && result.data.message) ||
-        (result.status === 0 ? 'Connexion perdue pendant l\'envoi. Réessayez.' : 'Erreur lors de l\'import du fichier.');
-      Toast.error(message, 6000);
+      const message = (result && result.data && result.data.message) ||
+        (result && result.status === 413 ? 'Fichier trop volumineux pour le serveur.' :
+          result && result.status === 0 ? 'Connexion perdue pendant l\'envoi. Vérifiez votre connexion et réessayez.' :
+            'Erreur lors de l\'import du fichier.');
+      Toast.error(message, 8000);
     }
   },
 };
@@ -1649,7 +1771,7 @@ const Testimonies = {
           </div>
           <div style="margin-left:auto;">${Utils.statusBadge(t.statut)}</div>
         </div>
-        ${t.image ? `<img src="${t.image}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px;">` : ''}
+        ${t.image ? FileUpload.mediaHtml(t.image, { style: 'width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px;' }) : ''}
         <h4 style="font-size:0.95rem;margin-bottom:8px;">${t.titre}</h4>
         <div class="testimony-body" style="-webkit-line-clamp:4;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">${t.contenu}</div>
         <div class="testimony-footer">
@@ -1700,7 +1822,7 @@ const Testimonies = {
             <span class="text-muted text-sm">${Utils.formatDate(t.createdAt)}</span>
           </div>
         </div>
-        ${t.image ? `<img src="${t.image}" style="width:100%;border-radius:12px;margin-bottom:16px;">` : ''}
+        ${t.image ? FileUpload.mediaHtml(t.image, { style: 'width:100%;border-radius:12px;margin-bottom:16px;' }) : ''}
         <h3 style="margin-bottom:12px;">${t.titre}</h3>
         <p style="line-height:1.8;color:var(--text-secondary);">${t.contenu}</p>
         <div class="divider"></div>
@@ -1812,6 +1934,8 @@ const Teachings = {
             <span class="text-xs text-muted">👁 ${t.vues || 0}</span>
             <span class="text-xs text-muted">⬇ ${t.telechargements || 0}</span>
           </div>
+          ${t.fichierUrl && ['audio', 'video'].includes(FileUpload.displayKind(t.fichierUrl))
+            ? `<div style="margin-top:10px;">${FileUpload.mediaHtml(t.fichierUrl)}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
           ${t.fichierUrl || t.lien ? `<a href="${t.fichierUrl || t.lien}" target="_blank" class="btn btn-sm btn-primary" onclick="Teachings.download('${t.id}')">Accéder</a>` : ''}
@@ -2037,11 +2161,17 @@ const Gallery = {
       return;
     }
 
-    container.innerHTML = data.map(img => `
-      <div class="gallery-item" onclick="Gallery.viewImage('${img.imageUrl}', '${img.titre}')">
-        <img src="${img.imageUrl}" alt="${img.titre}" loading="lazy">
-      </div>
-    `).join('');
+    // Photos, vidéos et audios : vignette adaptée, lecture dans la fenêtre de détail
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+    this.items = data;
+    container.innerHTML = data.map((item, i) => {
+      const kind = FileUpload.displayKind(item.imageUrl);
+      let thumb;
+      if (kind === 'image') thumb = `<img src="${esc(item.imageUrl)}" alt="${esc(item.titre)}" loading="lazy">`;
+      else if (kind === 'video') thumb = `<video src="${esc(item.imageUrl)}#t=0.5" muted playsinline preload="metadata"></video><span class="gallery-badge">▶</span>`;
+      else thumb = `<div class="gallery-file"><span>${FileUpload.kindOf(item.imageUrl) === 'audio' ? '🎵' : '🎬'}</span><small>${esc(item.titre)}</small></div>`;
+      return `<div class="gallery-item" onclick="Gallery.view(${i})">${thumb}</div>`;
+    }).join('');
 
     Pagination.render(
       document.getElementById('galleryPagination'),
@@ -2050,12 +2180,20 @@ const Gallery = {
     );
   },
 
-  viewImage(url, title) {
+  view(i) {
+    const item = (this.items || [])[i];
     const detail = document.getElementById('galleryDetailContent');
-    if (detail) {
-      detail.innerHTML = `<img src="${url}" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;"><p style="text-align:center;margin-top:12px;color:var(--text-muted);">${title}</p>`;
-      Modal.open('galleryDetailModal');
-    }
+    if (!item || !detail) return;
+    const title = String(item.titre ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+    detail.innerHTML = FileUpload.mediaHtml(item.imageUrl, { alt: item.titre, style: 'width:100%;max-height:70vh;object-fit:contain;border-radius:12px;' }) +
+      `<p style="text-align:center;margin-top:12px;color:var(--text-muted);">${title}</p>`;
+    Modal.open('galleryDetailModal');
+  },
+
+  // Ancien nom, conservé pour compatibilité
+  viewImage(url, title) {
+    this.items = [{ imageUrl: url, titre: title }];
+    this.view(0);
   },
 
   openNew() { Modal.open('newGalleryModal'); },

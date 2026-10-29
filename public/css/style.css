@@ -1971,3 +1971,22 @@ video.file-upload-media { max-height: 260px; }
 audio.file-upload-media { width: 100%; }
 .file-upload-doc { color: var(--ras-gold); font-weight: 600; word-break: break-all; }
 .file-upload-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Galerie : vignettes vidéo et audio */
+.gallery-item { position: relative; }
+.gallery-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; background: #000; }
+.gallery-badge {
+  position: absolute; inset: 0; margin: auto;
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 1.2rem;
+  pointer-events: none;
+}
+.gallery-file {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: var(--space-3); text-align: center;
+  background: var(--gradient-dark, var(--bg-card));
+}
+.gallery-file span { font-size: 2.5rem; }
+.gallery-file small { color: var(--text-secondary); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

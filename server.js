@@ -121,6 +121,8 @@ app.use(express.static(config.paths.public, { etag: true, maxAge: '1h' }));
 app.use('/api', rateLimit({
   windowMs: config.security.rateLimit.windowMs,
   max: config.security.rateLimit.max,
+  // Les morceaux d'un gros fichier sont comptés par le limiteur d'import (par fichier)
+  skip: req => req.path === '/uploads/chunk',
   message: { success: false, message: 'Trop de requêtes. Veuillez réessayer plus tard.' },
   standardHeaders: true,
   legacyHeaders: false,
